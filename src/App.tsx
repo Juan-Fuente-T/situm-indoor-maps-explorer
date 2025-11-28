@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Poi, Building, BuildingListElement } from "./types/situmTypes";
 import SitumSDK from '@situm/sdk-js';
+import MapComponent from './components/MapComponent';
 
 
 function App() {
@@ -71,36 +72,42 @@ function App() {
 
 
   return (
-    <div className="p-10 font-sans">
-      <h1 className="text-2xl font-bold mb-4">Prueba Técnica Situm (Juan Fuente)</h1>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          <p>Error: {error}</p>
-        </div>
-      )}
-
-      {!data && !error && <p>Cargando datos de la API...</p>}
-
-      {data && (
-        <div className="border p-4 rounded shadow bg-gray-50">
-          <h2 className="text-xl font-semibold text-blue-600">{data.building.name}</h2>
-          <p className="text-gray-600">ID: {data.building.id}</p>
-          <div className="mt-4">
-            <h3 className="font-bold">POIs Encontrados: {data.pois.length}</h3>
-            <ul className="mt-2 space-y-1">
-              {/* Limita la lista de Pois mostrados con Slice*/}
-              {data.pois.slice(0, 5).map((poi: Poi) => (
-
-                <li key={poi.id} className="text-sm bg-white p-2 border rounded">
-                  {poi.name} (Planta: {poi.floorId})
-                </li>
-              ))}
-            </ul>
-            {data.pois.length > 5 && <p className="text-sm text-gray-500 mt-2">... y más</p>}
+    <div className="flex flex-col p-10 font-sans w-full items-center gap-8 border border-red-800">
+      <div>
+        <h1 className="text-2xl font-bold mb-4">Prueba Técnica Situm (Juan Fuente)</h1>
+      </div>
+      <div className="flex p-10 font-sans w-full border border-gray-800">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p>Error: {error}</p>
           </div>
+        )}
+
+        {!data && !error && <p>Cargando datos de la API...</p>}
+
+        {data && (
+          <div className="border p-4 rounded shadow bg-gray-50">
+            <h2 className="text-xl font-semibold text-blue-600">{data.building.name}</h2>
+            <p className="text-gray-600">ID: {data.building.id}</p>
+            <div className="mt-4">
+              <h3 className="font-bold">POIs Encontrados: {data.pois.length}</h3>
+              <ul className="mt-2 space-y-1">
+                {/* Limita la lista de Pois mostrados con Slice*/}
+                {data.pois.slice(0, 5).map((poi: Poi) => (
+
+                  <li key={poi.id} className="text-sm bg-white p-2 border rounded">
+                    {poi.name} (Planta: {poi.floorId})
+                  </li>
+                ))}
+              </ul>
+              {data.pois.length > 5 && <p className="text-sm text-gray-500 mt-2">... y más</p>}
+            </div>
+          </div>
+        )}
+        <div className="w-2/3">
+          <MapComponent building={data?.building} pois={data?.pois} />
         </div>
-      )}
+      </div>
     </div>
   );
 }
