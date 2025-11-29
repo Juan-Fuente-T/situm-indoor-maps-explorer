@@ -41,7 +41,7 @@ export const FallbackComponent: React.FC<{ message?: string }> = ({ message }) =
     }
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center z-[1000] p-4 sm:p-8">
+        <div className="fixed inset-0 flex items-center justify-center z-[1000] p-4 sm:p-8 bg-[#111726]/80">
             <div
                 className="flex flex-col items-center justify-center gap-5
                 rounded-lg p-8 text-[#FBFBFB] text-center

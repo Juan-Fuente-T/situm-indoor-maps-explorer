@@ -80,6 +80,7 @@ function App() {
   // FILTRADO: Solo pasamos al mapa y a la lista los POIs de la planta actual
   const filteredPois = useMemo(() => {
     if (!data || !selectedFloor) return [];
+    console.log("SELECTED FLOOR", selectedFloor);
     return data.pois.filter(poi => poi.floorId === selectedFloor.id);
   }, [data, selectedFloor]);
 
@@ -98,11 +99,12 @@ function App() {
         {!data && !error && <p>Cargando datos de la API...</p>}
 
         {data && (
-          <div className="border border-black w-1/3 bg-gray-200 p-6 rounded">
+          <div className="border border-gray-800 w-1/3 bg-gray-200 p-6 rounded">
             {/* COLUMNA IZQUIERDA */}
-            <div className="border p-4 rounded shadow bg-gray-50">
+            {/* <div className="border p-4 rounded shadow bg-gray-50"> */}
+            <div className="bg-white border rounded-lg shadow p-2 gap-2 flex-1 flex flex-col overflow-hidden">
               <h2 className="text-xl font-semibold text-blue-600">{data.building.name}</h2>
-              <p className="text-gray-600">ID: {data.building.id}</p>
+              <p className="text-gray-600">Edificio ID: {data.building.id}</p>
 
               {/* Selector de Plantas */}
               <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
@@ -123,7 +125,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Lista Filtrada */}
               {/* <div className="mt-4">
                 <h3 className="font-bold">POIs Encontrados: {data.pois.length}</h3>
                 <ul className="mt-2 space-y-1">
@@ -137,33 +138,46 @@ function App() {
                 {data.pois.length > 5 && <p className="text-sm text-gray-500 mt-2">... y más</p>}
               </div> */}
             </div>
-            <div className="space-y-2">
-              {filteredPois.slice(0, 10).map(poi => {
-
-                // Cruza datos, busca el nombre del piso correspondiente en los datos del edificio
-                const floor = data.building.floors.find(floor => floor.id === poi.floorId);
-                // Si encuentra el piso, muestra su nombre. Si no, el ID.
-                const floorName = floor ? `Planta ${floor.name}` : `ID: ${poi.floorId}`;
-                <div className='bg-white p-2 border rounded'>
-                </div>
-
-                return (
-                  <div
-                    key={poi.id}
-                    className="p-1 border bg-white border rounded hover:bg-gray-100 cursor-pointer transition-colors"
-                    onClick={() => console.log("Click lista:", poi.name)}
-                  >
-                    <div className="font-medium">{poi.name}</div>
-                    {/* Mostramos el nombre del piso */}
-                    <div className="text-xs text-gray-500">{floorName}</div>
-                  </div>
-                );
-              })}
+            {/* Lista Filtrada */}
+            <div className="bg-white mt-4 border rounded-lg shadow flex-1 flex flex-col overflow-hidden">
+              <div className="p-4 border-b bg-gray-50">
+                 {/* <h2 className="font-bold text-blue-800">{data.building.name}</h2> */}
+                 <h2 className="font-bold text-blue-800">Planta {selectedFloor?.name}</h2>
+                 <p className="text-xs text-gray-500">
+                   {filteredPois.length} POIs en planta {selectedFloor?.name}
+                 </p>
+               </div>
+              <div className="overflow-y-auto flex-1 p-2 space-y-1">
+                {/* {filteredPois.slice(0, 10).map(poi => { */}
+                 {filteredPois.map(poi => (
+                   <div
+                     key={poi.id}
+                     className="p-3 border rounded hover:bg-blue-50 cursor-pointer transition-colors bg-white"
+                     onClick={() => console.log("Click lista:", poi.name)}
+                   >
+                     <div className="font-medium text-gray-700">{poi.name}</div>
+                   </div>
+                 ))}
+                 {filteredPois.length === 0 && (
+                   <div className="p-4 text-center text-gray-400 text-sm">
+                     No hay puntos de interés en esta planta.
+                   </div>
+                 )}
+               </div>
             </div>
           </div>
         )}
-        <div className="w-full border border-gray-800 rounded">
+        {/* <div className="w-full border border-gray-800 rounded">
           <MapComponent building={data?.building} pois={data?.pois} />
+        </div> */}
+        {/* COLUMNA DERECHA: Mapa */}
+        {/* <div className="w-full border border-gray-800 rounded shadow-lg relative overflow-hidden bg-gray-200"> */}
+        <div className="w-full border border-gray-800 rounded shadow-lg bg-gray-200 relative overflow-hidden p-2">
+          <MapComponent
+            building={data?.building} //Pasa el edificio
+            pois={filteredPois} // Pasa los Pois filtrados
+            currentFloor={selectedFloor} // Pasa la planta para pintar el plano
+          />
         </div>
       </div>
     </div>
