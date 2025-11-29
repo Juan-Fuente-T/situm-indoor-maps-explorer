@@ -145,3 +145,10 @@ export type Dimensions = {
   width: number;
   length: number;
 };
+
+export type Node = {
+  id: number;
+  floorId: number;
+  x: number;
+  y: number;
+};

@@ -1,42 +1,27 @@
 // @react-compilation-disable
 import { useMemo, useEffect, useState, useRef } from 'react';
-import type { Poi, Building, Floor } from '../types/situmTypes';
-// import Map, { Marker, NavigationControl} from 'react-map-gl/maplibre';
-import Map, { Marker, NavigationControl, Source, Layer} from 'react-map-gl/maplibre';
+import Map, { Marker, NavigationControl, Source, Layer } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { ErrorBoundary, FallbackComponent } from './ErrorBoundary';
 import PopupComponent from './PopupComponent.tsx';
 import checkImage from '../utils/checkImage.ts'
+import { useUIStore } from '../stores/uiStore';
+import type { Poi } from "../types/situmTypes";
+
+interface MapProps {
+    filteredPois: Poi[]
+}
 
 // Estilo base
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
-interface MapProps {
-    building: Building | undefined | null;
-    pois: Poi[] | undefined | null;
-    currentFloor: Floor | undefined | null;
-    selectedPoi: Poi | undefined | null;
-    setSelectedPoi: (poi: Poi | null) => void;
-}
-interface WrapperProps {
-    building: Building | undefined | null;
-    pois: Poi[] | undefined | null;
-    currentFloor: Floor | undefined | null;
-    selectedPoi: Poi | undefined | null;
-    setSelectedPoi: (poi: Poi | null) => void;
-}
-
-function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPoi }: MapProps) {
-    // const [imageOK, setImageOK] = useState<boolean | null>(null);
+function MapComponent({ filteredPois }: MapProps) {
+    const { building, currentFloor, selectedPoi, setSelectedPoi } = useUIStore();
     const [, setImageOK] = useState<boolean | null>(null);
     const mapRef = useRef<MapRef>(null);
 
-    function handleClosePopup() {
-        setSelectedPoi(null);
-    }
-
-    //Validaa la imagen al recibir mapUrl
+    //Valida la imagen al recibir mapUrl
     useEffect(() => {
         const url = currentFloor?.maps?.map_url; //Url de la imagen del edificio
         if (!url) {
@@ -55,6 +40,7 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
             }
         });
     }, [currentFloor?.maps?.map_url]);
+
     // EXTRACCIÓN DE PRIMITIVOS:
     // Extrae los valores necesarios para satisfacer al linter/compilador de React
     // y evitar que se queje de dependencias incorrectas en los useMemo.
@@ -88,7 +74,7 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
     // Desactivado el linter para esta función en la linea 1 el para evitar problemas con el compilador
     const imageCoordinates = useMemo(() => {
         // MapLibre ImageSource espera: [TopLeft, TopRight, BottomRight, BottomLeft]
-        // Situm devuelve 'corners'. Vamos a asumir el orden y mapear lat/lng.
+        // Situm devuelve 'corners'. Asume el orden y mapear lat/lng.
         if (!buildingCorners || buildingCorners.length < 4) return undefined;
 
         const c = buildingCorners;
@@ -104,13 +90,8 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
     }, [building?.id]);
 
 
+    const floorMapUrl = currentFloor?.maps?.map_url; // URL de la imagen del piso actual
 
-    // URL de la imagen del piso actual
-    //    const floorMapUrl = currentFloor?.maps?.map_url;
-    const floorMapUrl = currentFloor?.maps?.map_url;
-    console.log("buildingCorners", buildingCorners)
-    console.log("currentFloor", currentFloor)
-    console.log("floorMapUrl", floorMapUrl)
     if (!building) {
         return <div className="h-[500px] w-full bg-gray-100 flex items-center justify-center">Cargando mapa...</div>;
     }
@@ -153,7 +134,7 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
                 )}
 
                 {/* Renderizado de POIs */}
-                {pois && pois.map((poi) => {
+                {filteredPois && filteredPois.map((poi) => {
                     // Busca coordenadas en 'location' o 'position' (por seguridad)
                     // Normaliza a lat/lng o latitude/longitude
                     const loc = poi.location;
@@ -187,7 +168,7 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
                                 //     duration: 1200, // Duración suave (1.2s)
                                 //     essential: true
                                 //     });
-                                }}
+                            }}
                         >
                             <div
                                 className={`text-xl cursor-pointer hover:scale-110 transition-transform relative group flex justify-center
@@ -220,22 +201,16 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
                         </Marker>
                     );
                 })}
-                {selectedPoi && <PopupComponent selectedPoi={selectedPoi} currentFloor={currentFloor} onClose={handleClosePopup} />}
+                {selectedPoi && <PopupComponent />}
             </Map>
         </div>
     );
 }
 // El Wrapper recibe los datos y se los pasa al MapComponent, protegiéndolo con el ErrorBoundary
-const ComponentMapWrapper = ({ building, pois, currentFloor, selectedPoi, setSelectedPoi }: WrapperProps) => {
+const ComponentMapWrapper = ({ filteredPois }: MapProps) => {
     return (
         <ErrorBoundary fallback={<FallbackComponent />}>
-            <MapComponent
-                building={building}
-                pois={pois}
-                currentFloor={currentFloor}
-                selectedPoi={selectedPoi}
-                setSelectedPoi={setSelectedPoi}
-            />
+            <MapComponent filteredPois={filteredPois} />
         </ErrorBoundary>
     );
 };

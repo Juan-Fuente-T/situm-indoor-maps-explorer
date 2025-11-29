@@ -1,20 +1,16 @@
-import type { Poi, Floor } from '../types/situmTypes';
 import { Popup } from 'react-map-gl/maplibre';
+import { useUIStore } from '../stores/uiStore';
 
+export default function PopupComponent() {
+    const {currentFloor, selectedPoi, setSelectedPoi} = useUIStore();
 
-interface PoupProps {
-    selectedPoi: Poi | undefined | null,
-    currentFloor: Floor | undefined | null,
-    onClose: () => void
-}
-export default function PopupComponent({ selectedPoi, currentFloor, onClose }: PoupProps) {
     if (!selectedPoi?.location.lat && !selectedPoi?.location.lng) return null;
     return (
         <Popup
             longitude={selectedPoi?.location.lng}
             latitude={selectedPoi?.location.lat}
             // anchor="top" //obliga a crecer hacia abajo
-            onClose={onClose}
+            onClose={() => setSelectedPoi(null)}
             closeOnClick={false}
             maxWidth="380px"
             className="z-50"
