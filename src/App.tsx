@@ -12,26 +12,18 @@ function App() {
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
   useEffect(() => {
-    // Inicializar el SDK
+    // Inicializar el SDK ">
     const sdk = new SitumSDK({
       auth: {
         apiKey: import.meta.env.VITE_APP_SITUM_API_KEY,
       },
     });
 
-    console.log("SDK Inicializado. Pidiendo datos...");
-
-    // Usa promesas (async/await dentro de una función)
+    // Usa promesas (async/await dentro de la función)
     const fetchData = async () => {
       try {
         // const buildings: Promise<readonly BuildingListElement[]> = sdk.cartography.getBuildings();
-        // console.log("Buildings()...", buildings);
-
-        // console.log("Llamando a cartography.getBuildings()...");
-        // const buildingsList = await sdk.cartography.getBuildings();
-        // console.log("EDIFICIOS RECIBIDOS:", buildingsList);
-        // Busca el edificio 7033 (convierte a string para asegurar)
-        // const targetBuilding= buildingsList.find((b: BuildingListElement) => String(b.id) === '7033');
+        // console.log("Buildings()...", buildings); //MODO INDICADO EN LOS DOCS
 
         // Pide el detalle COMPLETO del edificio 7033
         const targetBuilding = await sdk.cartography.getBuildingById(7033);
@@ -78,16 +70,35 @@ function App() {
 
   }, []);
 
-  // FILTRADO: Solo pasamos al mapa y a la lista los POIs de la planta actual
+  // Effect para el SCROLL AUTO de elementos en la lista lateral al ser seleccionados
+  useEffect(() => {
+    if (selectedPoi) {
+      // console.log("POI ACTIVO:", selectedPoi.name, "| ID:", selectedPoi.id);
+
+      // SCROLL AUTOMÁTICO - Busca el elemento en el DOM por su ID y lo centra en la vista
+      const element = document.getElementById(`poi-item-${selectedPoi.id}`);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }
+  }, [selectedPoi]);
+
+  // FILTRADO: Solo pasa al mapa y a la lista los POIs de la planta actual
   const filteredPois = useMemo(() => {
     if (!data || !selectedFloor) return [];
-    console.log("SELECTED FLOOR", selectedFloor);
-    return data.pois.filter(poi => poi.floorId === selectedFloor.id);
+    
+    const byFloor = data.pois.filter(poi => poi.floorId === selectedFloor.id);
+    // ORDENACIÓN ALFABÉTICA (A-Z) - Permite al usuario encontrar "Baños" o "Entrada" rápidamente.
+    return byFloor.sort((a, b) => a.name.trim().localeCompare(b.name.trim()));
   }, [data, selectedFloor]);
+
   // const situmColor = '#283380'
 
   return (
-    <div className="p-10 w-full">
+    <div className="p-10 w-full text-[#283380]">
       <div>
         <h1 className="text-2xl font-bold mb-8">Prueba Técnica Situm (Juan Fuente)</h1>
       </div>
@@ -100,13 +111,11 @@ function App() {
 
         {!data && !error && <p>Cargando datos de la API...</p>}
 
-
         {data && (
           <div className="border border-gray-800 w-1/3 bg-gray-200 p-6 rounded">
             {/* COLUMNA IZQUIERDA */}
-            {/* <div className="border p-4 rounded shadow bg-gray-50"> */}
             <div className="bg-white border rounded-lg shadow p-2 gap-2 flex-1 flex flex-col overflow-hidden">
-              <h2 className="text-xl font-semibold text-[#283380]">{data.building.name}</h2>
+              <h2 className="text-xl font-semibold">{data.building.name}</h2>
               <p className="text-gray-600">Edificio ID: {data.building.id}</p>
 
               {/* Selector de Plantas */}
@@ -127,60 +136,60 @@ function App() {
                   ))}
                 </div>
               </div>
-
-              {/* <div className="mt-4">
-                <h3 className="font-bold">POIs Encontrados: {data.pois.length}</h3>
-                <ul className="mt-2 space-y-1">
-                  {data.pois.slice(0, 5).map((poi: Poi) => (
-                    
-                    <li key={poi.id} className="text-sm bg-white p-2 border rounded">
-                      {poi.name} (Planta: {poi.floorId})
-                    </li>
-                  ))}
-                </ul>
-                {data.pois.length > 5 && <p className="text-sm text-gray-500 mt-2">... y más</p>}
-              </div> */}
             </div>
             {/* Lista Filtrada */}
             <div className="bg-white mt-4 border rounded-lg shadow flex-1 flex flex-col  overflow-y-auto max-h-[665px] pr-2">
               <div className="p-4 border-b bg-gray-50">
-                 {/* <h2 className="font-bold text-blue-800">{data.building.name}</h2> */}
-                 <h2 className="font-bold text-bg-[#283380]">Planta {selectedFloor?.name}</h2>
-                 <p className="text-xs text-gray-500">
-                   {filteredPois.length} POIs en planta {selectedFloor?.name}
-                 </p>
-               </div>
-              <div className="overflow-y-auto flex-1 p-2 space-y-1">
-                {/* {filteredPois.slice(0, 10).map(poi => { */}
-                 {filteredPois.map(poi => (
-                   <div
-                     key={poi.id}
-                     className="p-3 border rounded hover:bg-[#283380]/30 cursor-pointer transition-colors bg-white"
-                     onClick={() => setSelectedPoi(poi)}
-                   >
-                     <div className="font-medium text-gray-700">{poi.name}</div>
-                   </div>
-                 ))}
-                 {filteredPois.length === 0 && (
-                   <div className="p-4 text-center text-gray-400 text-sm">
-                     No hay puntos de interés en esta planta.
-                   </div>
-                 )}
-               </div>
+                <h2 className="font-bold text-bg-[#283380]">Planta {selectedFloor?.name}</h2>
+                <p className="text-xs text-gray-500">
+                  {filteredPois.length} POIs en planta {selectedFloor?.name}
+                </p>
+              </div>
+
+              {/* Contenedor con scroll para evitar listado demasiado largo*/}
+              <div className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar">
+                {filteredPois.map(poi => {
+                  const isSelected = selectedPoi?.id === poi.id;
+
+                  return (
+                    <div
+                     // Id para poder centrar el scroll y mostrar el elemento seleccionado de la lista
+                      id={`poi-item-${poi.id}`}
+                      key={poi.id}
+                      onClick={() => setSelectedPoi(poi)}
+                      // Si está seleccionado, fondo azul situm y letra blanca
+                      className={`p-3 rounded-md cursor-pointer transition-all border ${isSelected
+                          ? 'bg-[#283380] border-[#283380] shadow-sm translate-x-1'
+                          : 'bg-[#283380]/10 border-transparent hover:bg-[#283380]/30  hover:border-[#283380]/80'
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Punto indicador de estado */}
+                        <div className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-gray-300'}`} />
+                        <div className={`font-medium ${isSelected ? 'text-white' : 'text-gray-700'}`}>
+                          {poi.name}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredPois.length === 0 && (
+                  <div className="p-4 text-center text-gray-400 text-sm">
+                    No hay puntos de interés en esta planta.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
-        {/* <div className="w-full border border-gray-800 rounded">
-          <MapComponent building={data?.building} pois={data?.pois} />
-        </div> */}
         {/* COLUMNA DERECHA: Mapa */}
-        {/* <div className="w-full border border-gray-800 rounded shadow-lg relative overflow-hidden bg-gray-200"> */}
-        <div className="w-full h-fit border border-gray-800 rounded shadow-lg bg-gray-200 relative overflow-hidden p-2">
+        <div className="w-full border border-gray-800 rounded shadow-lg relative overflow-hidden bg-gray-200">
+        {/* <div className="w-full h-fit border border-gray-800 rounded shadow-lg bg-gray-200 relative overflow-hidden p-2"> */}
           <MapComponent
             building={data?.building} //Pasa el edificio
             pois={filteredPois} // Pasa los Pois filtrados
             currentFloor={selectedFloor} // Pasa la planta para pintar el plano
-            selectedPoi={selectedPoi}
+            selectedPoi={selectedPoi} //Pasa el Poi seleccionadp
             setSelectedPoi={setSelectedPoi}
           />
         </div>
@@ -188,7 +197,6 @@ function App() {
     </div>
   );
 }
-
 
 // El Wrapper recibe App protegiéndola con el ErrorBoundary
 const AppWrapper = () => {

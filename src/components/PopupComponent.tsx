@@ -16,10 +16,12 @@ export default function PopupComponent({ selectedPoi, currentFloor, onClose }: P
             // anchor="top" //obliga a crecer hacia abajo
             onClose={onClose}
             closeOnClick={false}
-            maxWidth="300px"
+            maxWidth="380px"
             className="z-50"
-            offset={15} //margen respecto al marker
+            offset={25} //margen respecto al marker
             focusAfterOpen={false}
+            // autoPan={true}
+            // autoPanPadding={{top: 50, bottom: 50, left: 50, right: 50}}
         >
             <div className="p-2 min-w-[200px]">
                 <h3 className="font-bold text-lg text-blue-800 mb-1">{selectedPoi?.name}</h3>
@@ -27,21 +29,19 @@ export default function PopupComponent({ selectedPoi, currentFloor, onClose }: P
                     <p><strong>Planta:</strong> {currentFloor?.name || selectedPoi?.floorId}</p>
                     {/* Muestra información HTML si existe */}
                     {selectedPoi?.categoryName && (
-                        // <div dangerouslySetInnerHTML={{ __html: selectedPoi.infoHtml }} className="mt-2 text-xs" />
                         <p><strong>Categoría: </strong>{selectedPoi?.categoryName}</p>
                     )}
                     {selectedPoi?.info && (
-                        // <div dangerouslySetInnerHTML={{ __html: selectedPoi.infoHtml }} className="mt-2 text-xs" />
-                        <p><strong>Info: </strong>{selectedPoi?.info}</p>
+                        <div dangerouslySetInnerHTML={{ __html: selectedPoi.info }} className="mt-2 text-xs"/>
                     )}
-                    {selectedPoi?.infoUnsafe && (
-                        // <div dangerouslySetInnerHTML={{ __html: selectedPoi.infoHtml }} className="mt-2 text-xs" />
-                        <p><strong>Info: </strong>{selectedPoi?.infoUnsafe}</p>
-                    )}
-                    {/* {selectedPoi?.icon && (
-                        // <div dangerouslySetInnerHTML={{ __html: selectedPoi.infoHtml }} className="mt-2 text-xs" />
-                        <img className='w-8 h-8'>{selectedPoi?.icon}</img>
-                    )} */}
+                    {/*Parece que falla al cargar la imagen - creo que no son válidas*/}
+                    {/* {selectedPoi.icon && (
+                                    <img
+                                        src={selectedPoi.icon}
+                                        alt="Icono"
+                                        className="w-8 h-8 object-contain ml-2 bg-gray-50 rounded p-0.5 border border-gray-100" 
+                                    />
+                                )} */}
                     {/* <button onClick={onClose} className="cursor-pointer">
                         <img src="/x-circle.svg" alt="close icon" className="w-8 h-8" />
                     </button> */}

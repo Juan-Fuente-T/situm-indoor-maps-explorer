@@ -1,13 +1,13 @@
 // @react-compilation-disable
 import { useMemo, useEffect, useState, useRef } from 'react';
+import type { Poi, Building, Floor } from '../types/situmTypes';
+// import Map, { Marker, NavigationControl} from 'react-map-gl/maplibre';
 import Map, { Marker, NavigationControl, Source, Layer} from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
-// import Map, { Marker, NavigationControl} from 'react-map-gl/maplibre';
-import type { Poi, Building, Floor } from '../types/situmTypes';
-import { ErrorBoundary, FallbackComponent } from './ErrorBoundary';
-import checkImage from '../utils/checkImage.ts'
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { ErrorBoundary, FallbackComponent } from './ErrorBoundary';
 import PopupComponent from './PopupComponent.tsx';
+import checkImage from '../utils/checkImage.ts'
 
 // Estilo base
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
@@ -32,16 +32,13 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
     const [, setImageOK] = useState<boolean | null>(null);
     const mapRef = useRef<MapRef>(null);
 
-
     function handleClosePopup() {
         setSelectedPoi(null);
     }
-    /* ------------------------------------------------------
-    Validar imagen al recibir mapUrl
-    -------------------------------------------------------*/
+
+    //Validaa la imagen al recibir mapUrl
     useEffect(() => {
-        //Url de la imagen del edificio
-        const url = currentFloor?.maps?.map_url;
+        const url = currentFloor?.maps?.map_url; //Url de la imagen del edificio
         if (!url) {
             console.warn("❌ No existe mapUrl en este floor.");
             return;
@@ -61,24 +58,11 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
     // EXTRACCIÓN DE PRIMITIVOS:
     // Extrae los valores necesarios para satisfacer al linter/compilador de React
     // y evitar que se queje de dependencias incorrectas en los useMemo.
-    // const buildingId = building?.id;
     const buildingLat = building?.location?.lat;
     const buildingLng = building?.location?.lng;
     const buildingRotation = building?.rotation;
     const buildingCorners = building?.corners;
-
-    //           const coords = useMemo(() => {
-    //     if (!building?.corners|| building?.corners.length === 0) return null;
-
-    //     const valid = building.corners.every(
-    //       (p) =>
-    //         Array.isArray(p) &&
-    //         p.length === 2 &&
-    //         typeof p[0] === "number" &&
-    //         typeof p[1] === "number"
-    //     );
-    //    return valid ? building.corners : null;
-    //   }, [building?.corners]);
+    // const buildingId = building?.id;
 
     const initialViewState = useMemo(() => {
         const rotationDegrees = buildingRotation ? (buildingRotation * 180) / Math.PI : 0;
@@ -98,12 +82,10 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
         // Fallback solo si los datos vienen corruptos
         // return { longitude: -3.7037, latitude: 40.4167, zoom: 15 };
         return { longitude: -8.426001, latitude: 43.352942, zoom: 15 };
-        // FIX: Usamos building?.id para evitar recalcular si cambia la referencia del objeto pero es el mismo edificio
     }, [buildingLat, buildingLng, buildingRotation]);
-    // }, [building]);
 
     // Coordenadas de la imagen (Los 4 puntos para estirar el plano)
-
+    // Desactivado el linter para esta función en la linea 1 el para evitar problemas con el compilador
     const imageCoordinates = useMemo(() => {
         // MapLibre ImageSource espera: [TopLeft, TopRight, BottomRight, BottomLeft]
         // Situm devuelve 'corners'. Vamos a asumir el orden y mapear lat/lng.
@@ -120,7 +102,7 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
         // Casting explícito a Tupla de 4 elementos.
         return coordenadas as [[number, number], [number, number], [number, number], [number, number]];
     }, [building?.id]);
-    console.log("imageCoordinates", imageCoordinates);
+
 
 
     // URL de la imagen del piso actual
@@ -134,28 +116,8 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
     }
 
     return (
-        // <div className="h-[500px] w-full rounded-lg overflow-hidden border border-gray-300 relative">
-        // <div style={{ height: '600px', width: '100%', position: 'relative', border: '1px solid #ccc', justifyContent: 'center', margin: 'auto' }}>
-        // Se usan estilos inline para evitar posibles problemas con el renderizado del mapa si React renderiza antes el mapa que los estilos de  Tailwind.
+        // Se usan estilos inline para evitar posibles problemas con el renderizado del mapa si React renderiza antes el mapa que los estilos de Tailwind.
         <div style={{ height: '900px', width: '100%', position: 'relative', border: '1px solid #ccc', justifyContent: 'center', margin: 'auto' }}>
-
-            {/* DEBUG VISUAL: Si esto sale en el mapa, es que building.location existe */}
-            {/* <div style={{
-                position: 'absolute',
-                top: 10,
-                left: 10,
-                zIndex: 1000,
-                background: 'rgba(255,255,255,0.9)',
-                padding: '5px',
-                fontSize: '10px',
-                maxWidth: '200px'
-            }}>
-                <strong>DEBUG:</strong><br />
-                Edificio: {building.name}<br />
-                Lat: {building.location.lat}<br />
-                Lng: {building.location.lng}<br />
-                POIs: {pois?.length}
-            </div> */}
             <Map
                 ref={mapRef} //Vincula el mapa a esta referencia
                 initialViewState={initialViewState}
@@ -163,18 +125,16 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
                 mapStyle={MAP_STYLE}
                 scrollZoom={false}
                 onClick={(e) => {
-                    // Si hacemos click en el fondo del mapa, cierra el popup
                     e.preventDefault();
-                    setSelectedPoi(null);
+                    setSelectedPoi(null); // Al hacer click en el mapa, cierra el popup
                 }}
             >
                 <NavigationControl position="top-right" />
                 {/* --- CAPA DEL PLANO (RASTER) --- */}
                 {/* IMAGEN DE PLANO NO SE MUESTRA (URL ROTA) */}
-                {/* Solo si tenemos coordenadas y URL de imagen */}
                 {imageCoordinates && floorMapUrl && (
                     <Source
-                        //    key={floorMapUrl}
+                        key={floorMapUrl}
                         id="floorplan-source"
                         type="image"
                         url={floorMapUrl}
@@ -187,7 +147,7 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
                                 'raster-opacity': 1,
                                 'raster-fade-duration': 0
                             }}
-                            beforeId="waterway-name" // Intentar ponerlo debajo de las etiquetas si se puede
+                            beforeId="waterway-name" // Intenta ponerlo debajo de las etiquetas si se puede
                         />
                     </Source>
                 )}
@@ -207,7 +167,6 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
                     // const situmColor = '#283380'
                     const isSelected = selectedPoi?.id === poi.id;
                     const iconColor = isSelected ? '#dc2626' : '#283380'; // Rojo si seleccionado, azul Situm normal
-                    // const scaleClass = isSelected ? 'scale-125 z-50' : 'hover:scale-110 z-10'; // Más grande y encima si seleccionado
 
                     //Crea los marcadores para cada POI
                     return (
@@ -216,23 +175,24 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
                             longitude={lng}
                             latitude={lat}
                             anchor="bottom"
+                            onClick={e => {
+                                e.originalEvent.stopPropagation();
+                                setSelectedPoi(poi);
+                                console.log("Click en POI:", poi.name);
+                                // Centrado - Al hacer clic, manda al mapa a volar a las coordenadas del POI
+                                // Desactivado por conseiderarse poco util al usuario
+                                // mapRef.current?.flyTo({
+                                //     center: [lng, lat],
+                                //     zoom: 19, // Acercamos un poco más para ver detalle
+                                //     duration: 1200, // Duración suave (1.2s)
+                                //     essential: true
+                                //     });
+                                }}
                         >
                             <div
-                                className="text-xl cursor-pointer hover:scale-110 transition-transform relative group flex justify-center"
+                                className={`text-xl cursor-pointer hover:scale-110 transition-transform relative group flex justify-center
+                                ${selectedPoi?.id === poi.id ? 'scale-150 z-50' : 'hover:scale-110 z-10'}`}
                                 title={poi.name}
-                                onClick={e => {
-                                    e.stopPropagation();
-                                    setSelectedPoi(poi);
-                                    console.log("Click en POI:", poi.name);
-                                    // Cntrado - Al hacer clic, manda al mapa a volar a las coordenadas del POI
-                                    // mapRef.current?.flyTo({
-                                    //     center: [lng, lat],
-                                    //     zoom: 19, // Acercamos un poco más para ver detalle
-                                    //     duration: 1200, // Duración suave (1.2s)
-                                    //     essential: true
-                                    //     });
-                                    }}
-
                             >
                                 {/* ✨ ICONO SVG PROFESIONAL:
                                     - Punta definida para precisión.
@@ -243,7 +203,6 @@ function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPo
                                     height="30"
                                     viewBox="0 0 24 24"
                                     style={{
-                                        // fill: '#dc2626',
                                         fill: iconColor,
                                         stroke: 'white',
                                         strokeWidth: '2px',
