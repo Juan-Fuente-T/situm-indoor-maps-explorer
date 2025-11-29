@@ -9,6 +9,7 @@ function App() {
   const [data, setData] = useState<{ building: Building; pois: Poi[] } | null>(null);
   const [selectedFloor, setSelectedFloor] = useState<Floor | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
 
   useEffect(() => {
     // Inicializar el SDK
@@ -83,6 +84,7 @@ function App() {
     console.log("SELECTED FLOOR", selectedFloor);
     return data.pois.filter(poi => poi.floorId === selectedFloor.id);
   }, [data, selectedFloor]);
+  // const situmColor = '#283380'
 
   return (
     <div className="p-10 w-full">
@@ -98,12 +100,13 @@ function App() {
 
         {!data && !error && <p>Cargando datos de la API...</p>}
 
+
         {data && (
           <div className="border border-gray-800 w-1/3 bg-gray-200 p-6 rounded">
             {/* COLUMNA IZQUIERDA */}
             {/* <div className="border p-4 rounded shadow bg-gray-50"> */}
             <div className="bg-white border rounded-lg shadow p-2 gap-2 flex-1 flex flex-col overflow-hidden">
-              <h2 className="text-xl font-semibold text-blue-600">{data.building.name}</h2>
+              <h2 className="text-xl font-semibold text-[#283380]">{data.building.name}</h2>
               <p className="text-gray-600">Edificio ID: {data.building.id}</p>
 
               {/* Selector de Plantas */}
@@ -115,7 +118,7 @@ function App() {
                       key={floor.id}
                       onClick={() => setSelectedFloor(floor)}
                       className={`px-4 py-2 rounded text-sm font-medium transition-colors ${selectedFloor?.id === floor.id
-                        ? 'bg-blue-600 text-white shadow-md'
+                        ? 'bg-[#283380] text-white shadow-md'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                     >
@@ -139,10 +142,10 @@ function App() {
               </div> */}
             </div>
             {/* Lista Filtrada */}
-            <div className="bg-white mt-4 border rounded-lg shadow flex-1 flex flex-col overflow-hidden">
+            <div className="bg-white mt-4 border rounded-lg shadow flex-1 flex flex-col  overflow-y-auto max-h-[665px] pr-2">
               <div className="p-4 border-b bg-gray-50">
                  {/* <h2 className="font-bold text-blue-800">{data.building.name}</h2> */}
-                 <h2 className="font-bold text-blue-800">Planta {selectedFloor?.name}</h2>
+                 <h2 className="font-bold text-bg-[#283380]">Planta {selectedFloor?.name}</h2>
                  <p className="text-xs text-gray-500">
                    {filteredPois.length} POIs en planta {selectedFloor?.name}
                  </p>
@@ -152,8 +155,8 @@ function App() {
                  {filteredPois.map(poi => (
                    <div
                      key={poi.id}
-                     className="p-3 border rounded hover:bg-blue-50 cursor-pointer transition-colors bg-white"
-                     onClick={() => console.log("Click lista:", poi.name)}
+                     className="p-3 border rounded hover:bg-[#283380]/30 cursor-pointer transition-colors bg-white"
+                     onClick={() => setSelectedPoi(poi)}
                    >
                      <div className="font-medium text-gray-700">{poi.name}</div>
                    </div>
@@ -172,11 +175,13 @@ function App() {
         </div> */}
         {/* COLUMNA DERECHA: Mapa */}
         {/* <div className="w-full border border-gray-800 rounded shadow-lg relative overflow-hidden bg-gray-200"> */}
-        <div className="w-full border border-gray-800 rounded shadow-lg bg-gray-200 relative overflow-hidden p-2">
+        <div className="w-full h-fit border border-gray-800 rounded shadow-lg bg-gray-200 relative overflow-hidden p-2">
           <MapComponent
             building={data?.building} //Pasa el edificio
             pois={filteredPois} // Pasa los Pois filtrados
             currentFloor={selectedFloor} // Pasa la planta para pintar el plano
+            selectedPoi={selectedPoi}
+            setSelectedPoi={setSelectedPoi}
           />
         </div>
       </div>

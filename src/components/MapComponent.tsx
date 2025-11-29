@@ -1,11 +1,13 @@
 // @react-compilation-disable
-import { useMemo, useEffect, useState } from 'react';
-import Map, { Marker, NavigationControl, Source, Layer } from 'react-map-gl/maplibre';
+import { useMemo, useEffect, useState, useRef } from 'react';
+import Map, { Marker, NavigationControl, Source, Layer} from 'react-map-gl/maplibre';
+import type { MapRef } from 'react-map-gl/maplibre';
 // import Map, { Marker, NavigationControl} from 'react-map-gl/maplibre';
 import type { Poi, Building, Floor } from '../types/situmTypes';
 import { ErrorBoundary, FallbackComponent } from './ErrorBoundary';
 import checkImage from '../utils/checkImage.ts'
 import 'maplibre-gl/dist/maplibre-gl.css';
+import PopupComponent from './PopupComponent.tsx';
 
 // Estilo base
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
@@ -14,17 +16,26 @@ interface MapProps {
     building: Building | undefined | null;
     pois: Poi[] | undefined | null;
     currentFloor: Floor | undefined | null;
+    selectedPoi: Poi | undefined | null;
+    setSelectedPoi: (poi: Poi | null) => void;
 }
 interface WrapperProps {
     building: Building | undefined | null;
     pois: Poi[] | undefined | null;
     currentFloor: Floor | undefined | null;
+    selectedPoi: Poi | undefined | null;
+    setSelectedPoi: (poi: Poi | null) => void;
 }
 
-function MapComponent({ building, pois, currentFloor }: MapProps) {
+function MapComponent({ building, pois, currentFloor, selectedPoi, setSelectedPoi }: MapProps) {
     // const [imageOK, setImageOK] = useState<boolean | null>(null);
     const [, setImageOK] = useState<boolean | null>(null);
-    
+    const mapRef = useRef<MapRef>(null);
+
+
+    function handleClosePopup() {
+        setSelectedPoi(null);
+    }
     /* ------------------------------------------------------
     Validar imagen al recibir mapUrl
     -------------------------------------------------------*/
@@ -146,10 +157,16 @@ function MapComponent({ building, pois, currentFloor }: MapProps) {
                 POIs: {pois?.length}
             </div> */}
             <Map
+                ref={mapRef} //Vincula el mapa a esta referencia
                 initialViewState={initialViewState}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={MAP_STYLE}
                 scrollZoom={false}
+                onClick={(e) => {
+                    // Si hacemos click en el fondo del mapa, cierra el popup
+                    e.preventDefault();
+                    setSelectedPoi(null);
+                }}
             >
                 <NavigationControl position="top-right" />
                 {/* --- CAPA DEL PLANO (RASTER) --- */}
@@ -187,6 +204,11 @@ function MapComponent({ building, pois, currentFloor }: MapProps) {
                     const lng = loc.lng ?? loc.lng;
                     if (isNaN(lat) || isNaN(lng)) return null;
 
+                    // const situmColor = '#283380'
+                    const isSelected = selectedPoi?.id === poi.id;
+                    const iconColor = isSelected ? '#dc2626' : '#283380'; // Rojo si seleccionado, azul Situm normal
+                    // const scaleClass = isSelected ? 'scale-125 z-50' : 'hover:scale-110 z-10'; // Más grande y encima si seleccionado
+
                     //Crea los marcadores para cada POI
                     return (
                         <Marker
@@ -200,8 +222,16 @@ function MapComponent({ building, pois, currentFloor }: MapProps) {
                                 title={poi.name}
                                 onClick={e => {
                                     e.stopPropagation();
+                                    setSelectedPoi(poi);
                                     console.log("Click en POI:", poi.name);
-                                }}
+                                    // Cntrado - Al hacer clic, manda al mapa a volar a las coordenadas del POI
+                                    // mapRef.current?.flyTo({
+                                    //     center: [lng, lat],
+                                    //     zoom: 19, // Acercamos un poco más para ver detalle
+                                    //     duration: 1200, // Duración suave (1.2s)
+                                    //     essential: true
+                                    //     });
+                                    }}
 
                             >
                                 {/* ✨ ICONO SVG PROFESIONAL:
@@ -213,7 +243,8 @@ function MapComponent({ building, pois, currentFloor }: MapProps) {
                                     height="30"
                                     viewBox="0 0 24 24"
                                     style={{
-                                        fill: '#dc2626',
+                                        // fill: '#dc2626',
+                                        fill: iconColor,
                                         stroke: 'white',
                                         strokeWidth: '2px',
                                         filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))'
@@ -230,18 +261,21 @@ function MapComponent({ building, pois, currentFloor }: MapProps) {
                         </Marker>
                     );
                 })}
+                {selectedPoi && <PopupComponent selectedPoi={selectedPoi} currentFloor={currentFloor} onClose={handleClosePopup} />}
             </Map>
         </div>
     );
 }
 // El Wrapper recibe los datos y se los pasa al MapComponent, protegiéndolo con el ErrorBoundary
-const ComponentMapWrapper = ({ building, pois, currentFloor }: WrapperProps) => {
+const ComponentMapWrapper = ({ building, pois, currentFloor, selectedPoi, setSelectedPoi }: WrapperProps) => {
     return (
         <ErrorBoundary fallback={<FallbackComponent />}>
             <MapComponent
                 building={building}
                 pois={pois}
                 currentFloor={currentFloor}
+                selectedPoi={selectedPoi}
+                setSelectedPoi={setSelectedPoi}
             />
         </ErrorBoundary>
     );
