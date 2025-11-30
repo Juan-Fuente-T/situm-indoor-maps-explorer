@@ -7,29 +7,32 @@ import { ErrorBoundary, FallbackComponent } from './ErrorBoundary';
 import PopupComponent from './PopupComponent.tsx';
 import checkImage from '../utils/checkImage.ts'
 import { useUIStore } from '../stores/uiStore';
-import type { Poi } from "../types/situmTypes";
-
-interface MapProps {
-    filteredPois: Poi[]
-}
 
 // Estilo base
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
-function MapComponent({ filteredPois }: MapProps) {
-  const currentFloor = useUIStore(state => state.currentFloor);
-  const selectedPoi = useUIStore(state => state.selectedPoi);
-  const building = useUIStore(state => state.building);
-  const setSelectedPoi = useUIStore(state => state.setSelectedPoi);
-
-  console.log("currentFloor",currentFloor);
-  console.log("selectedPoi",selectedPoi);
-  console.log("building",building);
-  console.log("filteredPois",filteredPois);
-//   console.log("",);
-    
+function MapComponent() {
+    const currentFloor = useUIStore(state => state.currentFloor);
+    const pois = useUIStore(state => state.pois);
+    const selectedPoi = useUIStore(state => state.selectedPoi);
+    const building = useUIStore(state => state.building);
+    const setSelectedPoi = useUIStore(state => state.setSelectedPoi);
     const [, setImageOK] = useState<boolean | null>(null);
     const mapRef = useRef<MapRef>(null);
+
+    //   console.log("currentFloor",currentFloor);
+    //   console.log("selectedPoi",selectedPoi);
+    //   console.log("building",building);
+    //   console.log("filteredPois",filteredPois);
+
+  // FILTRADO: Solo pasa al mapa los POIs de la planta actual
+    const filteredPois = useMemo(() => {
+        if (!pois || !currentFloor) return [];
+        // ORDENACIÓN ALFABÉTICA (A-Z) - Permite al usuario encontrar "Baños" o "Entrada" rápidamente.
+        return pois
+            .filter((poi) => poi.floorId === currentFloor.id)
+            .sort((a, b) => a.name.trim().localeCompare(b.name.trim()));
+    }, [pois, currentFloor]);
 
     //Valida la imagen al recibir mapUrl
     useEffect(() => {
@@ -57,7 +60,7 @@ function MapComponent({ filteredPois }: MapProps) {
     const buildingLat = building?.location?.lat;
     const buildingLng = building?.location?.lng;
     const buildingRotation = building?.rotation;
-    const buildingCorners = building?.corners;
+    // const buildingCorners = building?.corners;
     // const buildingId = building?.id;
 
     const initialViewState = useMemo(() => {
@@ -69,7 +72,7 @@ function MapComponent({ filteredPois }: MapProps) {
             return {
                 longitude: buildingLng, // -8.42497...
                 latitude: buildingLat,  // 43.35213...
-                zoom: 18.25, // Zoom alto para ver el edificio
+                zoom: 18, // Zoom alto para ver el edificio
                 bearing: rotationDegrees, // Rota el mapa para que se vea recto
                 pitch: 0
             };
@@ -82,7 +85,8 @@ function MapComponent({ filteredPois }: MapProps) {
 
     // Coordenadas de la imagen (Los 4 puntos para estirar el plano)
     // Desactivado el linter para esta función en la linea 1 el para evitar problemas con el compilador
-    const imageCoordinates = useMemo(() => {
+    /**
+     const imageCoordinates = useMemo(() => {
         // MapLibre ImageSource espera: [TopLeft, TopRight, BottomRight, BottomLeft]
         // Situm devuelve 'corners'. Asume el orden y mapear lat/lng.
         if (!buildingCorners || buildingCorners.length < 4) return undefined;
@@ -90,15 +94,22 @@ function MapComponent({ filteredPois }: MapProps) {
         const c = buildingCorners;
         // Mapeo directo: [lng, lat]
         const coordenadas = [
-            [c[3].lng, c[3].lat], // NW
-            [c[2].lng, c[2].lat], // NE
-            [c[1].lng, c[1].lat], // SE
-            [c[0].lng, c[0].lat]  // SW
+            [c[3].lat, c[3].lng], // NW
+            [c[2].lat, c[2].lng], // NE
+            [c[1].lat, c[1].lng], // SE
+            [c[0].lat, c[0].lng]  // SW
         ];
         // Casting explícito a Tupla de 4 elementos.
         return coordenadas as [[number, number], [number, number], [number, number], [number, number]];
     }, [building?.id]);
-
+*/
+    // Coordenadas mockeadas tomadas del log de coordenadas del edificio
+    const imageCoordinates: [[number, number], [number, number], [number, number], [number, number]] = [
+    [43.351747, -8.42639],
+    [43.351322, -8.423938],
+    [43.352517, -8.423549],
+    [43.352942, -8.426001]
+];
 
     const floorMapUrl = currentFloor?.maps?.map_url; // URL de la imagen del piso actual
 
@@ -108,7 +119,7 @@ function MapComponent({ filteredPois }: MapProps) {
 
     return (
         // Se usan estilos inline para evitar posibles problemas con el renderizado del mapa si React renderiza antes el mapa que los estilos de Tailwind.
-        <div style={{ height: '900px', width: '100%', position: 'relative', border: '1px solid #ccc', justifyContent: 'center', margin: 'auto' }}>
+        <div style={{ height: '800px', width: '100%', position: 'relative', border: '1px solid #ccc', justifyContent: 'center', margin: 'auto' }}>
             <Map
                 ref={mapRef} //Vincula el mapa a esta referencia
                 initialViewState={initialViewState}
@@ -123,6 +134,7 @@ function MapComponent({ filteredPois }: MapProps) {
                 <NavigationControl position="top-right" />
                 {/* --- CAPA DEL PLANO (RASTER) --- */}
                 {/* IMAGEN DE PLANO NO SE MUESTRA (URL ROTA) */}
+                {/* {floorMapUrl && ( */}
                 {imageCoordinates && floorMapUrl && (
                     <Source
                         key={floorMapUrl}
@@ -217,10 +229,10 @@ function MapComponent({ filteredPois }: MapProps) {
     );
 }
 // El Wrapper recibe los datos y se los pasa al MapComponent, protegiéndolo con el ErrorBoundary
-const ComponentMapWrapper = ({ filteredPois }: MapProps) => {
+const ComponentMapWrapper = () => {
     return (
         <ErrorBoundary fallback={<FallbackComponent />}>
-            <MapComponent filteredPois={filteredPois} />
+            <MapComponent />
         </ErrorBoundary>
     );
 };
