@@ -17,7 +17,17 @@ interface MapProps {
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
 function MapComponent({ filteredPois }: MapProps) {
-    const { building, currentFloor, selectedPoi, setSelectedPoi } = useUIStore();
+  const currentFloor = useUIStore(state => state.currentFloor);
+  const selectedPoi = useUIStore(state => state.selectedPoi);
+  const building = useUIStore(state => state.building);
+  const setSelectedPoi = useUIStore(state => state.setSelectedPoi);
+
+  console.log("currentFloor",currentFloor);
+  console.log("selectedPoi",selectedPoi);
+  console.log("building",building);
+  console.log("filteredPois",filteredPois);
+//   console.log("",);
+    
     const [, setImageOK] = useState<boolean | null>(null);
     const mapRef = useRef<MapRef>(null);
 

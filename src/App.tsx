@@ -1,9 +1,11 @@
-import { useEffect, useState, useMemo } from 'react';
-import type { Poi, Building } from "./types/situmTypes";
-import SitumSDK from '@situm/sdk-js';
+import { useEffect, useMemo } from 'react';
 import MapComponent from './components/MapComponent';
 import { ErrorBoundary, FallbackComponent } from './components/ErrorBoundary';
 import { useUIStore } from './stores/uiStore';
+import { useGetBuildingById } from './hooks/useGetBuildingById';
+import { useGetPois } from './hooks/useGetPois';
+
+const TARGET_ID = import.meta.env.VITE_APP_SITUM_BUILDING_ID;
 
 /**
  * Componente principal de la aplicación.
@@ -13,74 +15,20 @@ import { useUIStore } from './stores/uiStore';
  * Se utiliza el hook useMemo para filtrar los POIs por planta y mostrarlos en la lista lateral.
  */
 function App() {
- const { building, currentFloor, selectedPoi, setSelectedPoi, setCurrentFloor, setBuilding, setPois } = useUIStore();
-  const [error, setError] = useState<string | null>(null);
+  const { isLoading: loadingBuilding, error: errorBuilding } = useGetBuildingById(TARGET_ID);
+  const { isLoading: loadingPois, error: errorPois } = useGetPois();
 
-  useEffect(() => {
-    // Inicializar el SDK ">
-    const sdk = new SitumSDK({
-      auth: {
-        apiKey: import.meta.env.VITE_APP_SITUM_API_KEY,
-      },
-    });
+  const building = useUIStore(s => s.building);
+  const pois = useUIStore(s => s.pois);
+  const currentFloor = useUIStore(state => state.currentFloor);
+  const selectedPoi = useUIStore(state => state.selectedPoi);
 
-    // Usa promesas (async/await dentro de la función)
-    const fetchData = async () => {
-      try {
-        // const buildings: Promise<readonly BuildingListElement[]> = sdk.cartography.getBuildings();
-        // console.log("Buildings()...", buildings); //MODO INDICADO EN LOS DOCS
-
-        // Pide el detalle COMPLETO del edificio 7033
-        const targetBuilding = await sdk.cartography.getBuildingById(7033);
-      
-        if (targetBuilding) {
-          console.log("Pidiendo POIs...");
-          // Casting doble para los POIs
-          const pois = (await sdk.cartography.getPois({ buildingId: 7033 })) as unknown as Poi[];
-          setPois(pois);
-          console.log("POIS", pois);
-
-          // console.log("Pidiendo Pisos...");
-          // const floors = (await sdk.cartography.getFloors({ buildingId: 7033 })) as unknown as Floor[];
-
-          const fullBuilding: Building = {
-            ...targetBuilding,
-            pois: pois,
-            corners: targetBuilding.corners,
-            floors: targetBuilding.floors,
-            geofences: targetBuilding.geofences,
-            paths: targetBuilding.paths ||{ nodes: [], links: [] }
-          };
-
-          // setData({ building: fullBuilding, pois });
-          setBuilding(fullBuilding);
-
-          // Selecciona por defecto la planta baja (level 0) o la primera que haya
-          const defaultFloor = fullBuilding.floors.find(f => f.level === 0) || fullBuilding.floors[0];
-          setCurrentFloor(defaultFloor);
-        } else {
-          setError("Conexión exitosa, pero no encuentra el edificio 7033 en la lista.");
-        }
-
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Error desconocido al conectar con la API.");
-        }
-      }
-    };
-
-    //Llama a la función de busqueda
-    fetchData();
-
-  }, []);
+  const setCurrentFloor = useUIStore(s => s.setCurrentFloor);
+  const setSelectedPoi = useUIStore(s => s.setSelectedPoi);
 
   // Effect para el SCROLL AUTO de elementos en la lista lateral al ser seleccionados
   useEffect(() => {
     if (selectedPoi) {
-      // console.log("POI ACTIVO:", selectedPoi.name, "| ID:", selectedPoi.id);
-
       // SCROLL AUTOMÁTICO - Busca el elemento en el DOM por su ID y lo centra en la vista
       const element = document.getElementById(`poi-item-${selectedPoi.id}`);
       if (element) {
@@ -94,12 +42,27 @@ function App() {
 
   // FILTRADO: Solo pasa al mapa y a la lista los POIs de la planta actual
   const filteredPois = useMemo(() => {
-    if (!building || !currentFloor) return [];
-    
-    const byFloor = building.pois.filter(poi => poi.floorId === currentFloor.id);
+    if (!pois || !currentFloor) return [];
     // ORDENACIÓN ALFABÉTICA (A-Z) - Permite al usuario encontrar "Baños" o "Entrada" rápidamente.
-    return byFloor.sort((a, b) => a.name.trim().localeCompare(b.name.trim()));
-  }, [building, currentFloor]);
+    return pois
+      .filter(poi => poi.floorId === currentFloor.id)
+      .sort((a, b) => a.name.trim().localeCompare(b.name.trim()));
+  }, [pois, currentFloor]);
+
+  // --- RENDER ---
+  const isLoading = loadingBuilding || (loadingPois && !pois.length);
+  const error = errorBuilding || errorPois;
+
+  if (isLoading && !building)
+    return <div className="h-screen flex items-center justify-center animate-pulse text-gray-500">
+      Cargando Situm...
+    </div>;
+  if (error) 
+    return <div className="p-10 text-red-600 border border-red-200 bg-red-50 rounded m-10">
+      Error: {error instanceof Error ? error.message : "Error desconocido"}
+    </div>;
+  if (!building) return null;
+
 
   // const situmColor = '#283380'
   return (
@@ -158,14 +121,14 @@ function App() {
 
                   return (
                     <div
-                     // Id para poder centrar el scroll y mostrar el elemento seleccionado de la lista
+                      // Id para poder centrar el scroll y mostrar el elemento seleccionado de la lista
                       id={`poi-item-${poi.id}`}
                       key={poi.id}
                       onClick={() => setSelectedPoi(poi)}
                       // Si está seleccionado, fondo azul situm y letra blanca
                       className={`p-3 rounded-md cursor-pointer transition-all border ${isSelected
-                          ? 'bg-[#283380] border-[#283380] shadow-sm translate-x-1'
-                          : 'bg-[#283380]/10 border-transparent hover:bg-[#283380]/30  hover:border-[#283380]/80'
+                        ? 'bg-[#283380] border-[#283380] shadow-sm translate-x-1'
+                        : 'bg-[#283380]/10 border-transparent hover:bg-[#283380]/30  hover:border-[#283380]/80'
                         }`}
                     >
                       <div className="flex items-center gap-3">
@@ -189,7 +152,7 @@ function App() {
         )}
         {/* COLUMNA DERECHA: Mapa */}
         <div className="w-full border border-gray-800 rounded shadow-lg relative overflow-hidden bg-gray-200">
-        {/* <div className="w-full h-fit border border-gray-800 rounded shadow-lg bg-gray-200 relative overflow-hidden p-2"> */}
+          {/* <div className="w-full h-fit border border-gray-800 rounded shadow-lg bg-gray-200 relative overflow-hidden p-2"> */}
           <MapComponent filteredPois={filteredPois} />
         </div>
       </div>

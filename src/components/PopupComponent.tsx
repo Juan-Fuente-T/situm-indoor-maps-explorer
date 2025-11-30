@@ -1,7 +1,8 @@
 import { Popup } from 'react-map-gl/maplibre';
 import { useUIStore } from '../stores/uiStore';
+import { ErrorBoundary, FallbackComponent } from './ErrorBoundary';
 
-export default function PopupComponent() {
+function PopupComponent() {
     const {currentFloor, selectedPoi, setSelectedPoi} = useUIStore();
 
     if (!selectedPoi?.location.lat && !selectedPoi?.location.lng) return null;
@@ -44,6 +45,15 @@ export default function PopupComponent() {
                 </div>
             </div>
         </Popup>
-
     )
 }
+    // El Wrapper recibe los datos y se los pasa al PopupComponent, protegiéndolo con el ErrorBoundary
+    const PopupComponentWrapper = () => {
+        return (
+            <ErrorBoundary fallback={<FallbackComponent />}>
+                <PopupComponent />
+            </ErrorBoundary>
+        );
+    };
+    
+    export default PopupComponentWrapper;
