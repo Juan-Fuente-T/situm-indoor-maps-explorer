@@ -1,73 +1,176 @@
-# React + TypeScript + Vite
+# Situm Maps Explorer Test - Indoor Viewer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación SPA (Single Page Application) desarrollada con React, TypeScript y Vite para la visualización de cartografía de interiores utilizando el ecosistema de Situm. Consume la API pública con el SDK-JS para renderizar edificios, plantas y puntos de interés (POIs) de forma interactiva.
 
-Currently, two official plugins are available:
+[App desplegada en Vercel](https://situm-indoor-maps-explorer.vercel.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+* **Nota:** El despliegue en Vercel cuenta con un pipeline de CI/CD que ejecuta y valida todos los tests unitarios y de integración antes de publicar cualquier cambio.
 
-## React Compiler
+* **Nota:**  El proyecto está completamente Dockerizado y listo para ser ejecutado localmente de forma sencilla. Consulta la sección de "Instalación y Ejecución" para más detalles.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **⚠️ Aviso Importante:** Se devuelve una URL corrupta/inaccesible para la imagen del plano del edificio 7033. Por este motivo, el mapa se visualiza con el fondo cartográfico base pero sin el plano arquitectónico superpuesto. La aplicación detecta este fallo y lo gestiona.
 
-## Expanding the ESLint configuration
+![App de exploracion de interiores](./docs/situmFinal1.webp)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+![App de exploracion de interiores](./docs/situmFinal2.webp)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Stack Tecnológico
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **Core:** React 18, TypeScript, Vite.
+- **Cartografía:** MapLibre GL JS (WebGL), Situm SDK.
+- **Estado Global:**  Zustand. TanStack Query.
+- **Estilos:** TailwindCSS.
+- **Calidad:** Vitest, React Testing Library, ESLint.
+- **Infraestructura:** Docker, Nginx (Producción).
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 💡 Decisiones Técnicas de Arquitectura
+
+* React + TS + Vite: Velocidad de desarrollo (DX) y seguridad de tipos (Null safety).
+
+* Zustand: Estado global simplificado y rendimiento (suscripciones atómicas).
+
+* TanStack Query: Gestión eficiente de estado asíncrono y caché.
+
+* TailwindCSS: Desarrollo ágil de UI y consistencia visual.
+
+* Vitest: Testing unitario rápido con configuración nativa de Vite.
+
+* MapLibre GL: Mapa vectorial interactivo ligero con buena integración con React.
+
+## 📂 Estructura del Proyecto
+La arquitectura sigue una separación estricta entre Lógica de Negocio (Hooks/Stores) y Presentación (Components).
+
+```text
+src/
+├── components/
+│   ├── MapComponent.tsx           # Visualizador de MapLibre (Gestión de marcadores y Z-Index)
+│   ├── PoiDetailComponent.tsx     # Popup flotante personalizado (React + Tailwind)
+│   ├── SidebarComponent.tsx       # Orquestador del panel lateral (incluye PoisList y FloorSelector)
+│   ├── FloorSelectorComponent.tsx # Subcomponente interno (Botonera selección plantas)
+│   ├── PoisListComponent.tsx      # Subcomponente interno (Lista con scroll y acordeón)
+│   ├── ErrorBoundary.tsx          # Manejo defensivo de errores en tiempo de ejecución
+│   └── __tests__/                 # Tests de Integración de UI (Simulación de flujos)
+│
+├── hooks/
+│   ├── useGetBuildingById.ts      # Servicio: Obtención y normalización del Edificio
+│   ├── useGetPois.ts              # Servicio: Obtención reactiva de POIs
+│   └── __tests__/                 # Tests Unitarios de Hooks (con Mocks del SDK)
+│
+├── stores/
+│   ├── uiStore.ts                 # Store Global (Zustand): Fuente única de verdad
+│   └── __tests__/                 # Tests Unitarios del Store (Lógica pura)
+│
+├── test/
+│   └── mocks.ts                   # Factoría de Mocks (Tipado estricto según Situm SDK)
+│
+├── utils/
+│   └── checkImage.ts              # Utilidad para validar activos externos rotos
+│
+├── App.tsx                        # Layout Principal
+└── main.tsx                       # Punto de entrada
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Características Principales
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 🗺️ Visualización Cartográfica
+- Renderizado vectorial de alto rendimiento usando **MapLibre GL**.
+- Integración nativa con **Situm SDK** para la carga dinámica de la cartografía del edificio "7033".
+- Marcadores interactivos en el mapa que reaccionan a la selección. Al clicar en ellos se abre un **Tarjeta flotante** con detalles. Esta tarjeta se cierra automáticamente al clickar sobre el mapa o interactuar con la lista para no obstruir la visión ("Foco Contextual").
+- **Z-Index Dinámico:** Lógica de apilamiento visual para que el marcador seleccionado o sobre el que se pasa el puntero siempre se muestre por encima de los vecinos, evitando ocultamiento.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 🔄 Sincronización UI (Bidireccional)
+- **Mapa -> Lista**: Al pulsar un marcador en el mapa, la barra lateral hace scroll automático (*scrollIntoView*) hasta el elemento correspondiente.
+- **Lista -> Mapa**: Al seleccionar un POI en la lista, el mapa centra la vista en el marcador correspondiente y despliega su información.
+- **Filtrado en Cliente**: La lista filtra los POIs en tiempo real según la planta seleccionada (`selectedFloor`), ordenándolos alfabéticamente tras sanitizar los nombres.
+
+### ⚡ Arquitectura "Sync Pattern"
+- **Desacople total**: Los componentes visuales no realizan peticiones de red.
+- **Inyección Reactiva**: Hooks autónomos (`useGetPois`, `useGetBuildingById`) inyectan los datos en el Store de Zustand en cuanto están disponibles.
+
+### ✨ Atención a la calidad y aspecto visual
+- **Tipado estricto** Para cumplir con el estandar del SDK se usaron los tipos estrictos provistos.
+- **Robustez en Testing** Decisión de usar una **Mock Factory** para centralizar los objetos de los tests. Alto **Coverage** alcanzado con Vitest.
+- **Identidad Corporativa:** Adaptación meticulosa de colores (Azul Situm) o  imagen corparativa de Situm (favicon en navegador) para integración visual con la marca.
+
+![Covertura de test con Vitest](./docs/situmCoverage.webp)
+
+## Arquitectura
+
+Para un desglose detallado de la arquitectura de la aplicación, el flujo de datos y los diagramas de secuencia, consulte el documento **[ARQUITECTURA.md](ARQUITECTURA.md)**.
+
+### 💡 Decisiones técnicas relevantes y soluciones UX
+
+* **Renderizado Crítico (CSS Race Conditions):** El mapa cargaba con altura 0px debido a la carga asíncrona de clases Tailwind. Se forzó `style={{ height: '800px' }}` inline para garantizar dimensiones físicas antes de la instanciación del contexto WebGL.
+
+* **Gestión de Errores en Datos (Imagen Rota):** La API devuelve una URL corrupta para el plano del edificio 7033. Se implementó una utilidad defensiva (`checkImage`) para validar el recurso antes de intentar pintarlo, evitando errores en consola.
+
+* **Decisiones de UX:** Se optó por un mapa estático al seleccionar un POI, descartando la animación de cámara (flyTo) que desorienta al usuario.
+**Sincronización Bidireccional** (Lista <-> Mapa). Al clicar en la lista, el POI se ilumina en el mapa. Al clicar en el mapa, el POI se resalta en la lista.
+**Ordenación Alfabética** de los POIs para hacer intuitiva la búsqueda.
+**Scroll Virtual:**: Se limita la altura visible de la lista para limitar tamaño, centrandose automaticamente si un POIs es seleccionado en el mapa.
+
+* **Conflicto Visual (Popup vs Mapa):** El popup nativo de MapLibre se cortaba en los bordes del límite visible del mapa (clipping). Se reemplazó por un componente React flotante (`PoiDetail`) posicionado absolutamente sobre el mapa, permitiendo libertad de diseño y animaciones. Este popup no se posicionaba de modo relativo al POI seleccionado, por lo que era molesto en cuanto a UX a la hora de ver el mapa. Se decició abrirlo solo desde el mapa y mostrar informacion en la lista lateral cuando se selecciona un POI desde allí **Foco Contextual**.
+
+* **Gestión de Z-Index Dinámico:** Para evitar que marcadores solapados se oculten entre si, se implementó lógica de ordenación visual donde el POI seleccionado recibe `z-index: 50` y el *hover* `z-index: 40`.
+
+* **Evolución Arquitectónica:** El proyecto evolucionó de una estructura monolítica inicial a una arquitectura basada en un estado global, Hooks autónomos y Componentes sin lógica (Presentacionales) para mejorar la mantenibilidad y testabilidad.
+
+## Arquitectura
+
+Para un desglose detallado de la arquitectura de la aplicación, el flujo de datos y la arqutectura de test, consulte el documento **[ARQUITECTURA.md](ARQUITECTURA.md)**.
+
+
+## ⚙️ Instalación y Ejecución
+
+### 🚀 Instalación
+
+1. Clonar el repositorio:
+```bash
+git clone https://github.com/Juan-Fuente-T/situm-indoor-maps-explorer.git
 ```
+2. Entrar en el directorio:
+```bash
+cd situm-indoor-maps-explorer
+```
+3. Instalar dependencias:
+```bash
+npm install
+ó
+pnpm install
+ó
+yarn install
+```
+
+### 🧪 Modo desarrollo
+
+- Para levantar el servidor local:
+```bash
+npm run dev
+```
+- Esto iniciará la aplicación normalmente en:
+```bash
+http://localhost:5173/
+```
+
+### 🏗️ Build de producción
+
+- Generar la build optimizada:
+```bash
+npm run build
+```
+- Y para previsualizarla localmente:
+```bash
+npm run preview
+```
+
+
+## ⚠️ Problemas detectados
+
+* **Imagen de Plano:** La URL del plano (API) falla. Se implementó checkImage.ts para evitar errores visuales.
+
+* **Clipping MapLibre:** Se sustituyeron los popups nativos por un componente React flotante (PoiDetailComponent) para evitar cortes en los bordes.
+
+* **Error en Documentación:** Pequeño error en la documentación en [Situm SDK](https://developers.situm.com/sdk_documentation/sdk-js/classes/SitumSDK.html)
+Está importando Situm pero instanciando SitumSDK
+
+![Documentación SDK-JS](./docs/ErrorDocSitum.webp)

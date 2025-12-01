@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  situm-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SITUM_API_KEY: ${VITE_APP_SITUM_API_KEY}
+
+    container_name: situm-map-explorer
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
