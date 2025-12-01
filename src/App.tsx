@@ -4,6 +4,7 @@ import { ErrorBoundary, FallbackComponent } from './components/ErrorBoundary';
 import { useUIStore } from './stores/uiStore';
 import { useGetBuildingById } from './hooks/useGetBuildingById';
 import { useGetPois } from './hooks/useGetPois';
+import PoiDetailComponent from './components/PoiDetailComponent.tsx';
 
 const TARGET_ID = import.meta.env.VITE_APP_SITUM_BUILDING_ID;
 
@@ -50,7 +51,7 @@ function App() {
         {!building && !error && <p>Cargando datos de la API...</p>}
 
         {building && (
-          <div className="flex flex-col md:flex-row gap-4 h-[800px] w-full max-w-[1600px] overflow-hidden  border border-gray-800 bg-gray-200 p-2 rounded">
+          <div className="flex flex-col md:flex-row gap-4 h-[840px] w-full max-w-[1600px] overflow-hidden  border border-gray-800 bg-gray-200 p-2 rounded">
             {/* COLUMNA IZQUIERDA: Selector de plantas y Lista Filtrada */}
             {/* w-80 o w-1/4 asegura que la lista tenga un ancho sensato */}
             <div className="w-full md:w-1/4 flex-none h-full">
@@ -61,6 +62,7 @@ function App() {
             {/* flex-1 obliga al mapa a ocupar todo el espacio restante */}
             <div className="flex-1 relative w-[1100px] h-full ml-6 border border-gray-800 rounded shadow-lg relative overflow-hidden bg-gray-200">
               <MapComponent />
+              <PoiDetailComponent />
             </div>
           </div>
         )}

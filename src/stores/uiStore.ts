@@ -10,21 +10,23 @@ interface UIState {
     // --- ESTADO DE UI - Lo que el usuario está mirando ---
     currentFloor: Floor | null;
     selectedPoi: Poi | null;
+    isPopupOpen: boolean;
 
     // --- ACCIONES ---
     setBuilding: (building: Building | null) => void;
     setPois: (pois: Poi[]) => void;
     setCurrentFloor: (floor: Floor | null) => void;
     setSelectedPoi: (poi: Poi | null) => void;
+    setIsPopupOpen:(isOpen: boolean) => void;
 }
 
-// RECORDATORIO: Se llama 'use...' porque Zustand devuelve un HOOK de React.
 export const useUIStore = create<UIState>((set) => ({
     // Valores iniciales
     building: null,
     pois: [],
     currentFloor: null,
     selectedPoi: null,
+    isPopupOpen: false,
 
     // Setters de Datos
     setBuilding: (building) => set({ building }),
@@ -35,4 +37,5 @@ export const useUIStore = create<UIState>((set) => ({
     setCurrentFloor: (floor) => set({ currentFloor: floor, selectedPoi: null }),
 
     setSelectedPoi: (poi) => set({ selectedPoi: poi }),
+    setIsPopupOpen: (isOpen) => set({ isPopupOpen: isOpen }),
 }));

@@ -8,8 +8,9 @@ const PoisListComponent = () => {
     const pois = useUIStore((state) => state.pois);
     const currentFloor = useUIStore((state) => state.currentFloor);
     const selectedPoi = useUIStore((state) => state.selectedPoi);
-
     const setSelectedPoi = useUIStore((state) => state.setSelectedPoi);
+    const setIsPopupOpen = useUIStore((state) => state.setIsPopupOpen);
+    const isPopupOpen = useUIStore((state) => state.isPopupOpen);
 
     // Referencia para el scroll automático
     const itemRefs = useRef<Map<number, HTMLLIElement>>(new Map());
@@ -68,9 +69,9 @@ const PoisListComponent = () => {
                                     if (el) itemRefs.current.set(poi.id, el);
                                     else itemRefs.current.delete(poi.id);
                                 }}
-                                onClick={() => setSelectedPoi(poi)}
+                                onClick={() => {setSelectedPoi(poi); setIsPopupOpen(false)}}
                                 className={`
-                p-3 cursor-pointer rounded-md transition-all duration-200
+                                p-3 cursor-pointer rounded-md transition-all duration-200
                 ${isSelected ? 'bg-[#283380] border-[#283380] shadow-sm translate-x-1'
                                         : 'bg-[#283380]/10 border-transparent hover:bg-[#283380]/30  hover:border-[#283380]/80'
                                     }`}
@@ -81,7 +82,26 @@ const PoisListComponent = () => {
                                         {poi.name}
                                     </div>
                                 </div>
-
+                                {/* DETALLES DESPLEGABLES (Solo si seleccionado) - Efecto Acordeón */}
+                                {isSelected && !isPopupOpen && (
+                                    <div className="mt-3 pl-6 pb-6 text-xs text-gray-600 animate-in slide-in-from-top-1 duration-200">
+                                        {/* Categoría */}
+                                        {poi.categoryName && (
+                                            <span className="inline-block bg-[#283380] text-white px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold mb-2">
+                                                {poi.categoryName}
+                                            </span>
+                                        )}
+                                        {/* Descripción HTML */}
+                                        {poi.info ? (
+                                            <div
+                                                className="prose prose-sm max-w-none text-gray-100 leading-relaxed border-l-2 border-[#283380]/20 pl-2"
+                                                dangerouslySetInnerHTML={{ __html: poi.info }}
+                                            />
+                                        ) : (
+                                            <p className="italic text-gray-400 pl-2 border-l-2 border-gray-100">Sin descripción disponible.</p>
+                                        )}
+                                </div>
+                                )}
                             </li>
                         );
                     })}

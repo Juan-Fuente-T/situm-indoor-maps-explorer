@@ -57,15 +57,33 @@ describe('UI Store (Zustand)', () => {
     const mockFloor = createMockFloor({ id: 101, level: 0 });
     const prevPoi = createMockPoi({ id: 50, floorId: 101 });
 
-    useUIStore.setState({ selectedPoi: prevPoi as Poi });
+    useUIStore.setState({
+      selectedPoi: prevPoi as Poi,
+      isPopupOpen: false
+    });
 
     useUIStore.getState().setCurrentFloor(mockFloor as Floor);
 
     const state = useUIStore.getState();
     expect(state.currentFloor).toEqual(mockFloor);
-    expect(state.currentFloor?.id).toBe(101);
     expect(state.currentFloor?.id).toEqual(101)
     // Asegura que al cambiar de planta se limpie el POI seleccionado
     expect(state.selectedPoi).toBeNull();
+  });
+
+    it('debería controlar la visibilidad del popup (setIsPopupOpen)', () => {
+    const poi = createMockPoi({ id: 99, name: 'Cafetería' });
+
+      // Abre
+    useUIStore.getState().setIsPopupOpen(true);
+    useUIStore.getState().setSelectedPoi(poi);
+    expect(useUIStore.getState().isPopupOpen).toBe(true);
+    expect(useUIStore.getState().selectedPoi).toBe(poi);
+    
+    // Cierra
+    useUIStore.getState().setIsPopupOpen(false);
+    useUIStore.getState().setSelectedPoi(null);
+    expect(useUIStore.getState().isPopupOpen).toBe(false);
+    expect(useUIStore.getState().selectedPoi).toBeNull();
   });
 });

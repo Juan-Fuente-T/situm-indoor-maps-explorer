@@ -4,11 +4,10 @@ import Map, { Marker, NavigationControl, Source, Layer } from 'react-map-gl/mapl
 import type { MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { ErrorBoundary, FallbackComponent } from './ErrorBoundary';
-import PopupComponent from './PopupComponent.tsx';
+// import PoiDetailComponent from './PoiDetailComponent.tsx';
 import checkImage from '../utils/checkImage.ts'
 import { useUIStore } from '../stores/uiStore';
 
-// Estilo base
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
 function MapComponent() {
@@ -17,24 +16,29 @@ function MapComponent() {
     const selectedPoi = useUIStore(state => state.selectedPoi);
     const building = useUIStore(state => state.building);
     const setSelectedPoi = useUIStore(state => state.setSelectedPoi);
+    const setIsPopUpOpen = useUIStore(state => state.setIsPopupOpen);
     const [, setImageOK] = useState<boolean | null>(null);
     const mapRef = useRef<MapRef>(null);
-
-    //   console.log("currentFloor",currentFloor);
-    //   console.log("selectedPoi",selectedPoi);
-    //   console.log("building",building);
-    //   console.log("filteredPois",filteredPois);
+    //estado para controlar que poi está siendo hovered y resaltarlo
+    const [hoveredPoiId, setHoveredPoiId] = useState<number | null>(null);
 
   // FILTRADO: Solo pasa al mapa los POIs de la planta actual
     const filteredPois = useMemo(() => {
         if (!pois || !currentFloor) return [];
-        // ORDENACIÓN ALFABÉTICA (A-Z) - Permite al usuario encontrar "Baños" o "Entrada" rápidamente.
+
         return pois
             .filter((poi) => poi.floorId === currentFloor.id)
-            .sort((a, b) => a.name.trim().localeCompare(b.name.trim()));
-    }, [pois, currentFloor]);
+            .sort((a, b) => {
+                // PRIORIDAD: El POI seleccionado va AL FINAL (para que se pinte encima en el mapa)
+                if (a.id === selectedPoi?.id) return 1;  // 'a' es el elegido -> échalo al fondo
+                if (b.id === selectedPoi?.id) return -1; // 'b' es el elegido -> 'a' pasa delante
 
-    //Valida la imagen al recibir mapUrl
+                // SECUNDARIO: Si ninguno es el seleccionado, ordena alfabéticamente (A-Z)
+                return a.name.trim().localeCompare(b.name.trim());
+            });
+    }, [pois, currentFloor, selectedPoi]);
+
+        //Valida la imagen al recibir mapUrl
     useEffect(() => {
         const url = currentFloor?.maps?.map_url; //Url de la imagen del edificio
         if (!url) {
@@ -65,10 +69,8 @@ function MapComponent() {
 
     const initialViewState = useMemo(() => {
         const rotationDegrees = buildingRotation ? (buildingRotation * 180) / Math.PI : 0;
-        console.log("📐 Rotación calculada (Grados):", rotationDegrees);
         // Usa las coordenadas del edificio para centrar el mapa
         if (buildingLat && buildingLng) {
-            console.log("Centrando mapa en:", buildingRotation);
             return {
                 longitude: buildingLng, // -8.42497...
                 latitude: buildingLat,  // 43.35213...
@@ -85,6 +87,7 @@ function MapComponent() {
 
     // Coordenadas de la imagen (Los 4 puntos para estirar el plano)
     // Desactivado el linter para esta función en la linea 1 el para evitar problemas con el compilador
+    //NO SE ESTÁ USANDO PORQUE NO HAY IMAGEN VÁLIDA
     /**
      const imageCoordinates = useMemo(() => {
         // MapLibre ImageSource espera: [TopLeft, TopRight, BottomRight, BottomLeft]
@@ -119,7 +122,7 @@ function MapComponent() {
 
     return (
         // Se usan estilos inline para evitar posibles problemas con el renderizado del mapa si React renderiza antes el mapa que los estilos de Tailwind.
-        <div style={{ height: '800px', width: '100%', position: 'relative', border: '1px solid #ccc', justifyContent: 'center', margin: 'auto' }}>
+        <div style={{ height: '840px', width: '100%', position: 'relative', border: '1px solid #ccc', justifyContent: 'center', margin: 'auto' }}>
             <Map
                 ref={mapRef} //Vincula el mapa a esta referencia
                 initialViewState={initialViewState}
@@ -128,7 +131,8 @@ function MapComponent() {
                 scrollZoom={false}
                 onClick={(e) => {
                     e.preventDefault();
-                    setSelectedPoi(null); // Al hacer click en el mapa, cierra el popup
+                    setSelectedPoi(null); // Al hacer click en el mapa, elimina el Poi seleccionado
+                    setIsPopUpOpen(false); // Al hacer click en el mapa, cierra el popup
                 }}
             >
                 <NavigationControl position="top-right" />
@@ -157,10 +161,8 @@ function MapComponent() {
 
                 {/* Renderizado de POIs */}
                 {filteredPois && filteredPois.map((poi) => {
-                    // Busca coordenadas en 'location' o 'position' (por seguridad)
-                    // Normaliza a lat/lng o latitude/longitude
+                    // Busca coordenadas, por seguridad, y normaliza a lat/lng
                     const loc = poi.location;
-
                     if (!loc) return null;
 
                     const lat = loc.lat ?? loc.lat;
@@ -169,7 +171,11 @@ function MapComponent() {
 
                     // const situmColor = '#283380'
                     const isSelected = selectedPoi?.id === poi.id;
+                    const isHovered = hoveredPoiId === poi.id; //Detecta si un Poi es el hovered
                     const iconColor = isSelected ? '#dc2626' : '#283380'; // Rojo si seleccionado, azul Situm normal
+                    // --- Z-INDEX DINÁMICO ---
+                    // Si un Poi es seleccionado o hovered, le da un zIndex mas alto (50) para hacerlo visible.
+                    const markerZIndex = isSelected ? 50 : (isHovered ? 40 : 1);
 
                     //Crea los marcadores para cada POI
                     return (
@@ -178,10 +184,12 @@ function MapComponent() {
                             longitude={lng}
                             latitude={lat}
                             anchor="bottom"
+                            style={{ zIndex: markerZIndex }}
                             onClick={e => {
                                 e.originalEvent.stopPropagation();
-                                setSelectedPoi(poi);
-                                console.log("Click en POI:", poi.name);
+                                setIsPopUpOpen(true);
+                                setSelectedPoi(poi)
+                                // console.log("Click en POI:", poi.name);
                                 // Centrado - Al hacer clic, manda al mapa a volar a las coordenadas del POI
                                 // Desactivado por conseiderarse poco util al usuario
                                 // mapRef.current?.flyTo({
@@ -196,6 +204,8 @@ function MapComponent() {
                                 className={`text-xl cursor-pointer hover:scale-110 transition-transform relative group flex justify-center
                                 ${selectedPoi?.id === poi.id ? 'scale-150 z-50' : 'hover:scale-110 z-10'}`}
                                 title={poi.name}
+                                onMouseEnter={() => setHoveredPoiId(poi.id)}
+                                onMouseLeave={() => setHoveredPoiId(null)}
                             >
                                 {/* ✨ ICONO SVG PROFESIONAL:
                                     - Punta definida para precisión.
@@ -223,7 +233,6 @@ function MapComponent() {
                         </Marker>
                     );
                 })}
-                {selectedPoi && <PopupComponent />}
             </Map>
         </div>
     );

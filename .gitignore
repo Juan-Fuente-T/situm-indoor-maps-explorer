@@ -23,5 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
+#Vitest
+coverage/
+.nyc_output/
+
+#Variables entorno
 .env
 .env.local
