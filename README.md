@@ -162,7 +162,20 @@ npm run build
 ```bash
 npm run preview
 ```
+### Ejecución de Tests
 
+El proyecto cuenta con una batería de tests automatizados para garantizar la estabilidad del código.
+
+```bash
+# Ejecutar todos los tests (modo consola)
+npm run test
+
+# Abrir interfaz gráfica de Vitest (UI)
+npm run test:ui
+
+# Generar reporte de cobertura de código
+npx vitest run --coverage
+```
 
 ## ⚠️ Problemas detectados
 
