@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useEffect } from 'react';
 import SitumSDK from '@situm/sdk-js';
-import type { Building } from "../types/situmTypes";
+import type { RealBuilding } from '../types/situmTypes';
 import { useUIStore } from '../stores/uiStore';
 
 const sdk = new SitumSDK({
@@ -18,7 +18,9 @@ export const useGetBuildingById = (buildingId: number) => {
     queryKey: ['getBuildingById', buildingId],
     queryFn: async () => {
       const result = await sdk.cartography.getBuildingById(buildingId);
-      return result as Building;
+      // ⚠️ WORKAROUND: El SDK define `map_url` pero la API devuelve `mapUrl`
+    // Bug en Situm SDK o Api de pruebas. Forzamos el tipo correcto.
+    return result as unknown as RealBuilding;
     },
     enabled: !!buildingId, //solo se llama si hay id de edificio
     staleTime: Infinity, // solo se actualiza si cambia el edificio
@@ -27,7 +29,7 @@ export const useGetBuildingById = (buildingId: number) => {
   // Sincronización con Zustand
   useEffect(() => {
     const defaultFloor = data?.floors.find(f => f.level === 0) || data?.floors[0];
-    if (data && defaultFloor) {
+    if (data!== undefined && defaultFloor != undefined) {
       setBuilding(data);
       setCurrentFloor(defaultFloor);
     }

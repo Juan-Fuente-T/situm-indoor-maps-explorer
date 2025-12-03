@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useEffect } from 'react';
 import { useUIStore } from '../stores/uiStore';
 import SitumSDK from '@situm/sdk-js';
-import type { Poi, PoiSearch } from "../types/situmTypes";
+import type { Poi, PoiSearch } from "@situm/sdk-js";
 
 const sdk = new SitumSDK({
   auth: {

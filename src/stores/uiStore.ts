@@ -1,21 +1,22 @@
 import { create } from 'zustand';
-import type { Poi, Floor, Building } from '../types/situmTypes';
+import type { Poi } from '@situm/sdk-js';
+import type { RealBuilding, RealFloor } from '../types/situmTypes';
 
 // Define la interfaz del estado GLOBAL
 interface UIState {
     // --- DATOS PRINCIPALES del edificio ---
-    building: Building | null;
+    building: RealBuilding | null;
     pois: Poi[]; // Lista completa de POIs
 
     // --- ESTADO DE UI - Lo que el usuario está mirando ---
-    currentFloor: Floor | null;
+    currentFloor: RealFloor | null;
     selectedPoi: Poi | null;
     isPopupOpen: boolean;
 
     // --- ACCIONES ---
-    setBuilding: (building: Building | null) => void;
+    setBuilding: (building: RealBuilding | null) => void;
     setPois: (pois: Poi[]) => void;
-    setCurrentFloor: (floor: Floor | null) => void;
+    setCurrentFloor: (floor: RealFloor | null) => void;
     setSelectedPoi: (poi: Poi | null) => void;
     setIsPopupOpen:(isOpen: boolean) => void;
 }

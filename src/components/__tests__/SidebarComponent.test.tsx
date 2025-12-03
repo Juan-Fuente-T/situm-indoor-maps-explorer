@@ -3,8 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import SidebarComponentWrapper from '../SidebarComponent';
 import { useUIStore } from '../../stores/uiStore';
 import { createMockBuilding, createMockFloor, createMockPoi } from '../../test/mocks';
-import type { Building, Floor, Poi } from '@situm/sdk-js';
-
+import type { Poi } from '@situm/sdk-js';
+import type { RealBuilding, RealFloor } from '../../types/situmTypes';
 
 // Mocks necesarios para que no falle el renderizado
 vi.mock('../components/ErrorBoundary', () => ({
@@ -38,9 +38,9 @@ describe('SidebarComponent (Integración)', () => {
         });
 
         useUIStore.setState({
-            building: mockBuilding as Building,
+            building: mockBuilding as RealBuilding,
             pois: [mockPoi1 as Poi, mockPoi2 as Poi],
-            currentFloor: mockFloor0 as Floor, // Empieza en planta baja
+            currentFloor: mockFloor0 as RealFloor, // Empieza en planta baja
             selectedPoi: null
         });
     });
@@ -59,7 +59,7 @@ describe('SidebarComponent (Integración)', () => {
     it('debería mostrar los POIs de la planta actual', () => {
         render(<SidebarComponentWrapper />);
 
-        // Verificar que salen el POI de la planta 0
+        // Verifica que salen el POI de la planta 0
         expect(screen.getByText('Cafetería')).toBeInTheDocument();
     });
 
@@ -69,7 +69,7 @@ describe('SidebarComponent (Integración)', () => {
         const btnBaja = screen.getByText('Baja');
         const btnPrimera = screen.getByText('Primera');
 
-        // Comprobamos clases CSS (Tailwind)
+        // Comprueba clases CSS (Tailwind)
         // El activo debe tener fondo azul oscuro
         expect(btnBaja.className).toContain('bg-[#283380]');
         // El inactivo debe tener fondo gris/blanco

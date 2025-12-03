@@ -8,11 +8,10 @@ Aplicación SPA (Single Page Application) desarrollada con React, TypeScript y V
 
 * **Nota:**  El proyecto está completamente Dockerizado y listo para ser ejecutado localmente de forma sencilla. Consulta la sección de "Instalación y Ejecución" para más detalles.
 
-* **⚠️ Aviso Importante:** Se devuelve una URL corrupta/inaccesible para la imagen del plano del edificio 7033. Por este motivo, el mapa se visualiza con el fondo cartográfico base pero sin el plano arquitectónico superpuesto. La aplicación detecta este fallo y lo gestiona.
 
-![App de exploracion de interiores](./docs/situmFinal1.webp)
+![App de exploracion de interiores](./docs/SitumInterface1.webp)
 
-![App de exploracion de interiores](./docs/situmFinal2.webp)
+![App de exploracion de interiores](./docs/SitumInterface2.webp)
 
 ## Stack Tecnológico
 
@@ -104,14 +103,29 @@ Para un desglose detallado de la arquitectura de la aplicación, el flujo de dat
 
 * **Gestión de Errores en Datos (Imagen Rota):** La API devuelve una URL corrupta para el plano del edificio 7033. Se implementó una utilidad defensiva (`checkImage`) para validar el recurso antes de intentar pintarlo, evitando errores en consola.
 
+* **Manejo de Texturas Binarias (Blob):** La URL del plano proporcionada por la API no funcionaba como un enlace de imagen estándar, requiriendo un tratamiento como dato binario. Se implementó una descarga manual mediante fetch para convertir la respuesta en un Blob y generar una URL local temporal (URL.createObjectURL), permitiendo que el motor de renderizado de MapLibre procese la textura correctamente.
+
+* **Corrección de Tipado (SDK vs API):** Se detectó y solucionó una discrepancia entre los tipos oficiales del SDK (definidos en snake_case) y la respuesta real de la API (en camelCase). Se aplicó un patrón de extensión de tipos en TypeScript para normalizar los datos y evitar errores de compilación sin perder la seguridad de tipos.
+
 * **Decisiones de UX:** Se optó por un mapa estático al seleccionar un POI, descartando la animación de cámara (flyTo) que desorienta al usuario.
+
 **Sincronización Bidireccional** (Lista <-> Mapa). Al clicar en la lista, el POI se ilumina en el mapa. Al clicar en el mapa, el POI se resalta en la lista.
+
 **Ordenación Alfabética** de los POIs para hacer intuitiva la búsqueda.
+
 **Scroll Virtual:**: Se limita la altura visible de la lista para limitar tamaño, centrandose automaticamente si un POIs es seleccionado en el mapa.
 
-* **Conflicto Visual (Popup vs Mapa):** El popup nativo de MapLibre se cortaba en los bordes del límite visible del mapa (clipping). Se reemplazó por un componente React flotante (`PoiDetail`) posicionado absolutamente sobre el mapa, permitiendo libertad de diseño y animaciones. Este popup no se posicionaba de modo relativo al POI seleccionado, por lo que era molesto en cuanto a UX a la hora de ver el mapa. Se decició abrirlo solo desde el mapa y mostrar informacion en la lista lateral cuando se selecciona un POI desde allí **Foco Contextual**.
+* **Adaptabilidad (Responsive Design):** Se refactorizó la interfaz para garantizar una experiencia fluida en dispositivos móviles y tablets:
 
-* **Gestión de Z-Index Dinámico:** Para evitar que marcadores solapados se oculten entre si, se implementó lógica de ordenación visual donde el POI seleccionado recibe `z-index: 50` y el *hover* `z-index: 40`.
+**Layout Reactivo:** Cambio automático de una distribución de paneles laterales (Desktop) a una pila vertical (Mobile).
+
+**Zoom Dinámico:** Implementación de breakpoints lógicos en el mapa que ajustan automáticamente el nivel de zoom y el centrado según el ancho del dispositivo.
+
+**Controles Táctiles:** Adaptación del selector de plantas a scroll horizontal y ajuste dimensional de los popups y listas para maximizar el área útil del mapa en móviles.
+
+* **Conflicto Visual (Popup vs Mapa):** El popup nativo de MapLibre se cortaba en los bordes del límite visible del mapa (clipping). Se reemplazó por un componente React flotante (`PoiDetail`) posicionado absolutamente sobre el mapa, permitiendo libertad de diseño y animaciones. Este popup no se posicionaba de modo relativo al POI seleccionado, por lo que era molesto en cuanto a UX a la hora de ver el mapa. Se decició abrirlo solo desde el mapa y mostrar informacion en la lista lateral cuando se selecciona un POI desde allí **Foco Contextual**. También ha dejado de abrirse en móvil desde la lista de Pois para no interferir con la visión del mapa.
+
+* **Gestión de Z-Index Dinámico:** Para evitar que marcadores solapados se oculten entre si, se implementó lógica de ordenación visual donde el POI seleccionado recibe `z-index: 50` y el *hover* `z-index: 40` que evita que sean solapados por otros.
 
 * **Evolución Arquitectónica:** El proyecto evolucionó de una estructura monolítica inicial a una arquitectura basada en un estado global, Hooks autónomos y Componentes sin lógica (Presentacionales) para mejorar la mantenibilidad y testabilidad.
 
@@ -179,7 +193,9 @@ npx vitest run --coverage
 
 ## ⚠️ Problemas detectados
 
-* **Imagen de Plano:** La URL del plano (API) falla. Se implementó checkImage.ts para evitar errores visuales.
+* **Desajustes de valores:** Existe un desajuste de tipos entre el SDK y la API (map_url vs mapUrl) en [Situm Types](https://github.com/situmtech/situm-sdk-js/blob/4081d2cb7cb37d063f8a56895f06a31d86ed44f1/src/types/index.ts#L267)
+
+![Documentación SDK-JS](./docs/ErrorValoresSitum.webp)
 
 * **Clipping MapLibre:** Se sustituyeron los popups nativos por un componente React flotante (PoiDetailComponent) para evitar cortes en los bordes.
 

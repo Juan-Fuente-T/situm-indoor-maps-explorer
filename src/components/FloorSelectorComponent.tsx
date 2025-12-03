@@ -12,23 +12,23 @@ const FloorSelectorComponent = () => {
     if (!building) return null;
 
     return (
-        <div className="bg-white shadow p-2 gap-2 flex-none flex flex-col m-1">
-            <div className='flex justify-between items-center'>
-            <div>
-                <h2 className="text-xl font-semibold">{building.name}</h2>
-            <p className="text-gray-600">Edificio ID: {building.id}</p>
+        <div className="bg-white py-1 lg:p-2 lg:gap-2 flex-none flex flex-col m-1">
+            <div className="flex flex-row-reverse lg:flex-row justify-between items-center lg:items-start">
+                <div className="flex lg:flex-col items-center lg:items-start gap-4">
+                    <h2 className="text-lg lg:text-xl font-semibold">{building.name}</h2>
+                    <p className="text-gray-600">Edificio ID: {building.id}</p>
                 </div>
-                <img src="/situm-icon.svg" alt="close icon" className="w-10 h-10" />
+                <img src="/situm-icon.svg" alt="situm logo" className="w-8 h-8 md:w-10 md:h-10 xl:w-12 xl:h-12" />
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-                <h3 className="text-sm font-bold text-gray-500 mb-2 uppercase">Plantas</h3>
-                <div className="flex flex-wrap gap-2">
+            <div className="flex lg:flex-col items-end lg:items-start gap-2 justify-end bg-white lg:p-2 lg:p-4 rounded-lg lg:border lg:border-gray-200">
+                <h3 className="text-xs lg:text-sm font-bold text-gray-500 lg:mb-1 lg:mb-2 uppercase">Plantas</h3>
+                <div className="flex flex-nowrap overflow-x-auto gap-2 lg:pb-1 no-scrollbar items-center">
                     {building.floors.map(floor => (
                         <button
                             key={floor.id}
-                            onClick={() => {setCurrentFloor(floor); setIsPopupOpen(false);}}
-                            className={`px-4 py-2 rounded text-sm font-medium transition-colors ${currentFloor?.id === floor.id
+                            onClick={() => { setCurrentFloor(floor); setIsPopupOpen(false); }}
+                            className={`whitespace-nowrap flex-shrink-0 px-3 lg:px-3 xl-px-4 py-1.5 rounded text-sm font-medium border border-gray-800 transition-colors ${currentFloor?.id === floor.id
                                 ? 'bg-[#283380] text-white shadow-md'
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
