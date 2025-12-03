@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useUIStore } from '../uiStore';
-import type { Building, Floor, Poi } from '@situm/sdk-js';
+import type { Poi } from '@situm/sdk-js';
+import type { RealBuilding, RealFloor } from '../../types/situmTypes';
 import { createMockFloor, createMockBuilding, createMockPoi } from '../../test/mocks';
 
 describe('UI Store (Zustand)', () => {
-  // Reiniciamos el estado antes de cada test para empezar limpios
+  // Reinicia el estado antes de cada test para empezar limpios
   beforeEach(() => {
     useUIStore.setState({
       building: null,
@@ -23,7 +24,7 @@ describe('UI Store (Zustand)', () => {
   it('debería actualizar el edificio (setBuilding)', () => {
     const mockBuilding = createMockBuilding({ name: 'Edificio Real' });
 
-    useUIStore.getState().setBuilding(mockBuilding as Building);
+    useUIStore.getState().setBuilding(mockBuilding as RealBuilding);
 
     const state = useUIStore.getState();
     expect(state.building).toEqual(mockBuilding);
@@ -62,7 +63,7 @@ describe('UI Store (Zustand)', () => {
       isPopupOpen: false
     });
 
-    useUIStore.getState().setCurrentFloor(mockFloor as Floor);
+    useUIStore.getState().setCurrentFloor(mockFloor as RealFloor);
 
     const state = useUIStore.getState();
     expect(state.currentFloor).toEqual(mockFloor);
@@ -79,7 +80,7 @@ describe('UI Store (Zustand)', () => {
     useUIStore.getState().setSelectedPoi(poi);
     expect(useUIStore.getState().isPopupOpen).toBe(true);
     expect(useUIStore.getState().selectedPoi).toBe(poi);
-    
+
     // Cierra
     useUIStore.getState().setIsPopupOpen(false);
     useUIStore.getState().setSelectedPoi(null);

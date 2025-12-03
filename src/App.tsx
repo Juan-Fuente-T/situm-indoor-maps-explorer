@@ -35,13 +35,12 @@ function App() {
 
   // const situmColor = '#283380'
   return (
-    <div className="bg-gray-100 flex flex-col items-center justify-center p-6 text-[#283380]">
-
-      {/*Título*/}
+    <div className="bg-gray-100 flex flex-col items-center justify-center p-2 md:p-6 text-[#283380]">
+    {/*Título*/}
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold mb-8">Prueba Técnica Situm (Juan Fuente)</h1>
+        <h1 className="text-lg md:text-2xl font-bold md:mb-8">Prueba Técnica Situm (Juan Fuente)</h1>
       </div>
-      <div className="flex p-10 font-sans w-auto m-auto border border-[#283380] rounded-lg gap-8">
+      <div className="w-full max-w-[1600px] px-2 md:px-6 lg:py-6 lg:border lg:border-[#283380] rounded-lg">
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             <p>Error: {error}</p>
@@ -51,16 +50,15 @@ function App() {
         {!building && !error && <p>Cargando datos de la API...</p>}
 
         {building && (
-          <div className="flex flex-col md:flex-row gap-4 h-[840px] w-full max-w-[1600px] overflow-hidden  border border-gray-800 bg-gray-200 p-2 rounded">
+          <div className="flex flex-col-reverse lg:flex-row gap-1 lg:gap-6 w-full md:max-w-[1600px] h-[93vh] lg:h-auto overflow-hidden  border border-gray-800 bg-gray-200 p-2 rounded">
             {/* COLUMNA IZQUIERDA: Selector de plantas y Lista Filtrada */}
-            {/* w-80 o w-1/4 asegura que la lista tenga un ancho sensato */}
-            <div className="w-full md:w-1/4 flex-none h-full">
+            <div className="flex-1 lg:flex-none min-h-0 w-full lg:w-60 xl:w-80 flex-shrink-0 lg:h-[840px] overflow-hidden">
               <SidebarComponent />
             </div>
 
             {/* COLUMNA DERECHA: Mapa */}
-            {/* flex-1 obliga al mapa a ocupar todo el espacio restante */}
-            <div className="flex-1 relative w-[1100px] h-full ml-6 border border-gray-800 rounded shadow-lg relative overflow-hidden bg-gray-200">
+            {/* <div className="h-[40%] lg:h-[840px] w-full flex-none lg:flex-1 border border-gray-800 rounded shadow-lg overflow-hidden bg-gray-200 relative"> */}
+            <div className="h-[30vh] sm:h-[45vh] min-h-[300px] lg:h-[840px] w-full flex-none lg:flex-1 border border-gray-800 rounded shadow-lg overflow-hidden bg-gray-200 relative">
               <MapComponent />
               <PoiDetailComponent />
             </div>
@@ -68,7 +66,6 @@ function App() {
         )}
       </div>
     </div>
-
   );
 }
 

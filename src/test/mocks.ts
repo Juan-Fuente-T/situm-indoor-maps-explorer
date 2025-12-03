@@ -10,8 +10,8 @@ export const createMockFloor = (overrides = {}) => ({
   updatedAt: new Date('2024-01-01'),
   maps: {
     scale: 1,
-    map_url: 'http://example.com/map.png',
-    map_id: '1'
+    mapUrl: 'http://example.com/map.png',
+    mapId: '1'
   },
   customFields: [],
   ...overrides

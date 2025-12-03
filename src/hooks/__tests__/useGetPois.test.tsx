@@ -4,8 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useGetPois } from '../useGetPois';
 import { useUIStore } from '../../stores/uiStore'; // Importamos el store real
 import { createMockBuilding, createMockPoi } from '../../test/mocks';
-import type { Building } from '@situm/sdk-js';
-
+import type { RealBuilding } from '../../types/situmTypes';
 // --- MOCK DEL SDK (Patrón Hoisted) ---
 const { mockGetPois } = vi.hoisted(() => {
     return { mockGetPois: vi.fn() };
@@ -58,7 +57,7 @@ describe('useGetPois Hook', () => {
     it('debería descargar y guardar los POIs cuando hay un edificio (enabled: true)', async () => {
         // PREPARACIÓN: Inyectaun edificio en el Store para "activar" el hook
         const mockBuilding = createMockBuilding({ id: 7033 });
-        useUIStore.setState({ building: mockBuilding as Building });
+        useUIStore.setState({ building: mockBuilding as RealBuilding });
 
         // Prepara la respuesta falsa del SDK
         const mockPoisData = [

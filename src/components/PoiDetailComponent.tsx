@@ -12,15 +12,13 @@ export const PoiDetailComponent = () => {
     if (!isPopupOpen) return null;
 
     return (
-        // COMPONENTE FLOTANTE PURO (Sin líos sobre el mapa de Radix)
-        // Se coloca centrado, no demasiado abajo, a causa de ciertos popover demasiado pequeños
-        // <div className="absolute top-32 right-6 left-auto  md:w-96 z-[50] animate-in fade-in slide-in-from-bottom-4 duration-300">
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-24 md:w-96 z-[50] animate-in fade-in slide-in-from-bottom-4 duration-300">
-
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+        // COMPONENTE FLOTANTE PURO, evitando incompatibilidades con Radix
+        // Se coloca centrado, abajo
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-2 w-[80%] max-h-[90%] h-auto lg:bottom-12 lg:w-96 z-[50] animate-in fade-in slide-in-from-bottom-4 duration-300 flex flex-col shadow-2xl rounded-lg">
+            <div className="max-h-full bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
 
                 {/* Cabecera Azul Corporativa */}
-                <div className="bg-[#283380] p-4 flex justify-between items-start relative">
+                <div className="bg-[#283380] p-4 flex flex-none justify-between items-start relative">
                     <div className="pr-8">
                         <h3 className="text-lg font-bold text-white leading-tight">
                             {selectedPoi?.name}
@@ -42,7 +40,7 @@ export const PoiDetailComponent = () => {
                 </div>
 
                 {/* Cuerpo de Información */}
-                <div className="p-4 text-sm text-gray-600">
+                <div className="p-4 text-sm text-gray-600 overflow-y-auto min-h-0 custom-scrollbar">
 
                     {/* Metadatos (Planta) */}
                     <div className="flex items-center gap-2 mb-3 text-xs text-gray-500 font-medium bg-gray-50 p-2 rounded-lg border border-gray-100">

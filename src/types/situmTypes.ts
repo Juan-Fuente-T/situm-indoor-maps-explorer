@@ -80,11 +80,27 @@ export type Link = {
   accessible: boolean;
 };
 
-export type Maps = {
+type Maps = {
   scale: number;
   map_url: string;
   map_id: string;
 };
+
+//El SDK define `map_url` pero la API devuelve `mapUrl` para Maps
+// Soluciona el Bug creando los tipos necesarios.
+type RealMaps = {
+  scale: number;
+  mapUrl: string;
+  mapId: string;
+};
+
+export interface RealFloor extends Omit<Floor, 'maps'> {
+    maps: RealMaps;
+}
+
+export interface RealBuilding extends Omit<Building, 'floors'> {
+    floors: RealFloor[];
+}
 
 export type FloorBase = {
   buildingId: ID;
